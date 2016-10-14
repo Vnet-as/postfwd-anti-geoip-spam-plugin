@@ -37,7 +37,7 @@ open( my $log_file_fh, '>>', $log_filename ) or die "ERROR: Could not open file 
 # Enable or disable logging
 use constant DEBUG => 1;
 
-sub log_info {
+sub mylog_info {
    if (DEBUG) {
       my $date = localtime(time())->strftime('%F %T');
       my $str = "$date INFO: ";
@@ -48,7 +48,7 @@ sub log_info {
       print $log_file_fh $str;
    }
 }
-sub log_err {
+sub mylog_err {
    if (DEBUG) {
       my $date = localtime(time())->strftime('%F %T');
       my $str = "$date ERROR: ";
@@ -59,7 +59,7 @@ sub log_err {
       print $log_file_fh $str;
    }
 }
-sub log_fatal {
+sub mylog_fatal {
    if (DEBUG) {
       my $date = localtime(time())->strftime('%F %T');
       my $str = "$date FATAL: ";
@@ -92,7 +92,7 @@ my $login_count_from_country_st = "SELECT login_count FROM $table_name WHERE sas
 my $num_countries_logs_st = "SELECT COUNT(DISTINCT state_code) FROM $table_name WHERE sasl_username=?;";
 
 # Start log
-log_info ("Starting postfwd plugin");
+mylog_info ("Starting postfwd plugin");
 
 # DB connection - Update values to your DB connection
 my $driver = "mysql"; 
@@ -104,13 +104,13 @@ my $userid = "";
 my $password = "";
 
 # Connect
-my $dbh = DBI->connect($dsn, $userid, $password, { RaiseError => 0, AutoCommit => 1 }) or log_fatal ("$DBI::errstr");
+my $dbh = DBI->connect($dsn, $userid, $password, { RaiseError => 0, AutoCommit => 1 }) or mylog_fatal ("$DBI::errstr");
 $dbh->{mysql_auto_reconnect} = 1;
 
 # Create table "postfwd_logins" if it does not exists
-log_info ("Creating table postfwd_logins if it does not exists");
-my $create_table_sth = $dbh->prepare($create_table_st) or log_fatal ("dbh->errstr");
-$create_table_sth->execute() or log_fatal ("$create_table_sth->errstr");
+mylog_info ("Creating table postfwd_logins if it does not exists");
+my $create_table_sth = $dbh->prepare($create_table_st) or mylog_fatal ("dbh->errstr");
+$create_table_sth->execute() or mylog_fatal ("$create_table_sth->errstr");
 
 # Unique country login count limit
 my $uniq_country_login_count_limit = 5;
@@ -132,10 +132,10 @@ my $flush_interval = DAY;
 
       # Clear user mail and countries login count cache after flush interval expirates
       if ( ($last_cache_flush + DAY) < time() ) {
-         log_info ("Removing records which are older than $flush_interval");
-         my $clear_table_sth = $dbh->prepare($delete_old_logins) or log_err ("$dbh->errstr");
-         $clear_table_sth->execute($flush_interval) or log_err ("$clear_table_sth->errstr");
-         log_info ("DB cleared!");
+         mylog_info ("Removing records which are older than $flush_interval");
+         my $clear_table_sth = $dbh->prepare($delete_old_logins) or mylog_err ("$dbh->errstr");
+         $clear_table_sth->execute($flush_interval) or mylog_err ("$clear_table_sth->errstr");
+         mylog_info ("DB cleared!");
          $last_cache_flush = time();
       }
 
@@ -154,7 +154,7 @@ my $flush_interval = DAY;
       # Get country code from GeoIP module
       my $cc = $gi->country_code_by_addr($client_ip);
       if ( !length $cc || !$cc ) {
-         log_info ("Cannot find country code for IP address [$client_ip]");
+         mylog_info ("Cannot find country code for IP address [$client_ip]");
          return %result;
       }
 
@@ -162,30 +162,35 @@ my $flush_interval = DAY;
       my $check_row_existence_sth = $dbh->prepare($check_row_existence_st);
       my $rv = $check_row_existence_sth->execute($user, $client_ip, $cc);
       if ( !$rv ) {
-         log_err ("$rv->errstr");
+         mylog_err ("$rv->errstr");
          return %result;
       }
 
       # Check how many rows was returned (0 or more)
       if ( $rv == 0 ) {
          # Save new user mail into hash if it does not exists
-         log_info ("Inserting $user, $client_ip, $cc");
-         my $insert_sth = $dbh->prepare($insert_st) or log_err ("$dbh->errstr");
-         $insert_sth->execute($user, $client_ip, $cc, localtime(time())->strftime('%F %T')) or log_err ("$insert_sth->errstr");
+         mylog_info ("Inserting $user, $client_ip, $cc");
+         my $insert_sth = $dbh->prepare($insert_st) or mylog_err ("$dbh->errstr");
+         $insert_sth->execute($user, $client_ip, $cc, localtime(time())->strftime('%F %T')) or mylog_err ("$insert_sth->errstr");
       }
       else {
          # Increment or initialize login count for user and given IP/country
-         log_info ("Incrementing $user, $client_ip, $cc");
-         my $increment_sth = $dbh->prepare($increment_st) or log_err ("dbh->errstr");
-         $increment_sth->execute(localtime(time())->strftime('%F %T'), $user, $client_ip, $cc) or log_err ("$increment_sth->errstr");
+         mylog_info ("Incrementing $user, $client_ip, $cc");
+         my $increment_sth = $dbh->prepare($increment_st) or mylog_err ("dbh->errstr");
+         $increment_sth->execute(localtime(time())->strftime('%F %T'), $user, $client_ip, $cc) or mylog_err ("$increment_sth->errstr");
       }
 
       # Get number of logins from given IP
-      my $login_count_from_country_sth = $dbh->prepare($login_count_from_country_st) or log_err ("$dbh->errstr");
-      $login_count_from_country_sth->execute($user, $client_ip, $cc) or log_err ("$login_count_from_country_sth->errstr");
+      my $login_count_from_country_sth = $dbh->prepare($login_count_from_country_st) or mylog_err ("$dbh->errstr");
+      $login_count_from_country_sth->execute($user, $client_ip, $cc) or mylog_err ("$login_count_from_country_sth->errstr");
 
       $result{incr_client_country_login_count} = $login_count_from_country_sth->fetchrow_array;
-      log_info ("Number of logins from IP $client_ip is $result{incr_client_country_login_count}");
+      if ( $result{incr_client_country_login_count} ) {
+         mylog_err ("$login_count_from_country_sth->errstr");
+         return %result;
+      }
+
+      mylog_info ("Number of logins from IP $client_ip is $result{incr_client_country_login_count}");
 
       # Return number of logins from country last logged from
       return %result;
@@ -208,24 +213,28 @@ my $flush_interval = DAY;
       my $check_user_existence_sth = $dbh->prepare($check_user_existence_st);
       my $rv = $check_user_existence_sth->execute($user);
       if ( !$rv ) {
-         log_err ("$check_user_existence_sth->errstr");
+         mylog_err ("$check_user_existence_sth->errstr");
          return %result;
       }
 
       # Get number of unique countries from which has user logged
       my $num_countries_logs_sth = $dbh->prepare($num_countries_logs_st);
       if ( !($num_countries_logs_sth->execute($user)) ) {
-         log_err ("$num_countries_logs_sth->errstr");
+         mylog_err ("$num_countries_logs_sth->errstr");
          return %result;
       }
 
       $result{client_uniq_country_login_count} = $num_countries_logs_sth->fetchrow_array;
+      if (!$result{client_uniq_country_login_count}) {
+         mylog_err ("$num_countries_logs_sth->errstr");
+         return %result;
+      }
       
       if ( $result{client_uniq_country_login_count} > $uniq_country_login_count_limit ) {
-         log_info ("User $user is logged from more than $uniq_country_login_count_limit countries($result{client_uniq_country_login_count})");
+         mylog_info ("User $user is logged from more than $uniq_country_login_count_limit countries($result{client_uniq_country_login_count})");
       }
       else {
-         log_info ("Number of unique countries logged in from user [$user]: $result{client_uniq_country_login_count}");
+         mylog_info ("Number of unique countries logged in from user [$user]: $result{client_uniq_country_login_count}");
       }
 
       # Returns number of countries from which user logged in to an email via sasl
