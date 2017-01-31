@@ -1,3 +1,19 @@
+# **Table of Contents**
+
+(*generated with [DocToc](http://doctoc.herokuapp.com/)*)
+- [Postfwd GeoIP Botnet Block Plugin](#)
+   - [Installation](#)
+   - [Dependencies](#)
+         - [RedHat based distributions](#)
+         - [Debian based distributions](#)
+   - [Configuration](#)
+            - [Database backend configuration](#)
+            - [Database cleanup period](#)
+            - [Logging](#)
+   - [Useful database queries](#)
+   - [Automatic Tests (In progress)](#)
+   - [TODO list](#)
+
 # Postfwd GeoIP Botnet Block Plugin
 
 This is plugin to postfix firewall `postfwd` intended to block international spam botnets. International spam botnets are logging into hacked mail addresses via sasl login from multiple IP addresses based in usually more than 30 unique countries. After successful login, the hackers send spam from many unique IP addresses which circumvents traditional rate limits per IP address.
@@ -86,7 +102,7 @@ The database is by default set to remove records for users with last login date 
 By default logging for debuging purposes is enabled. Log file is located in `/tmp/postfwd_plugin.log`.
 You can disable logging by changing `use constant DEBUG => 1;` to `use constant DEBUG => 0;`
 
-### Useful database queries 
+## Useful database queries 
 
 1. Print mail accounts, total number of logins, total number of unique ip addresses and unique states for users who were logged in from more than 3 countries (Most useful for me)
 ```
