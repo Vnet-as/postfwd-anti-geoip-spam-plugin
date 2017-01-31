@@ -1,14 +1,14 @@
 # Postfwd GeoIP Botnet Block Plugin
 
-This is plugin to postfix firewall `postfwd` intended to block international spam botnets. Such botnets are logging into hacked mail addresses via sasl login from multiple IP addresses based in usually more than 30 unique countries. After successful login they send spam which circumvents traditional rate limits.
+This is plugin to postfix firewall `postfwd` intended to block international spam botnets. International spam botnets are logging into hacked mail addresses via sasl login from multiple IP addresses based in usually more than 30 unique countries. After successful login, the hackers send spam from many unique IP addresses which circumvents traditional rate limits per IP address.
 
 ## Installation
 
-Follow next instructions and also instructions in section [dependencies](#Dependecies)
+For installation follow next steps and also instructions in section [dependencies](#dependencies)
 - Copy plugin to your mail server. 
 - Install dependencies according to chapter `Dependencies`. 
 - To load plugin to postfwd you must add argument `--plugins <PATH TO PLUGIN>` to postfwd command. 
-- Add following rule to postfwd configuration file `postfwd.cf`. You can use your own message and parameter client_uniq_country_login_count which sets maximum number of unique countries to allow user to log in via sasl. 
+- Add following rules to postfwd configuration file `postfwd.cf`. You can use your own message and parameter value `client_uniq_country_login_count` which sets maximum number of unique countries to allow user to log in via sasl. 
 
 ```
 # Anti spam botnet rule
@@ -24,7 +24,7 @@ id=BAN_BOTNET ; \
    action=rate(sasl_username/1/3600/554 Your mail account $$sasl_username was compromised. Please change your password immediately after next login.)
 ```
 
-- Create database table with indexes (Optional, because if database is not created it is always created on plugin startup) 
+Create database table with indexes (Optional, because if database is not created it is always created on plugin startup)
 
 ```
 CREATE TABLE IF NOT EXISTS postfwd_logins (
@@ -37,7 +37,6 @@ CREATE TABLE IF NOT EXISTS postfwd_logins (
 CREATE INDEX postfwd_sasl_client_state_index ON postfwd_logins (sasl_username, ip_address, state_code);
 CREATE INDEX postfwd_sasl_username ON postfwd_logins (sasl_username);
 ```
-
 
 ## Dependencies
 

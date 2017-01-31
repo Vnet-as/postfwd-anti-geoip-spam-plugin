@@ -35,13 +35,13 @@ sub mylog {
 }
 
 sub mylog_info {
-   mylog("INFO", @_);
+   mylog("INFO[$$]", @_);
 }
 sub mylog_err {
-   mylog("ERROR", @_);
+   mylog("ERROR[$$]", @_);
 }
 sub mylog_fatal {
-   mylog("FATAL", @_);
+   mylog("FATAL[$$]", @_);
    exit -1;
 }
 
@@ -115,8 +115,8 @@ my $flush_interval = DAY;
       if ( ($last_cache_flush + DAY) < time() ) {
          mylog_info ("Removing records which are older than $flush_interval");
          
-         my $clear_table_sth = $dbh->prepare($delete_old_logins) or mylog_err ($dbh->errstr);
-         $clear_table_sth->execute($flush_interval) or mylog_err ($clear_table_sth->errstr);
+         my $clear_table_sth = $dbh->prepare($delete_old_logins)  or do { mylog_err($dbh->errstr); return %result; };
+         $clear_table_sth->execute($flush_interval)               or do { mylog_err($clear_table_sth->errstr); return %result; };
 
          mylog_info ("DB cleared!");
          $last_cache_flush = time();
@@ -142,7 +142,7 @@ my $flush_interval = DAY;
       }
 
       # Check if user with given IP already has record
-      my $check_row_existence_sth = $dbh->prepare($check_row_existence_st) or mylog_err ($dbh->errstr);
+      my $check_row_existence_sth = $dbh->prepare($check_row_existence_st) or do { mylog_err($dbh->errstr); return %result; };
       if ( !($check_row_existence_sth->execute($user, $client_ip, $cc)) ) {
          mylog_err ($check_row_existence_sth->errstr);
          return %result;
@@ -150,21 +150,25 @@ my $flush_interval = DAY;
 
       # Check how many rows was returned (0 or more)
       my $rowCount = $check_row_existence_sth->fetchrow_array;
+      if ( $check_row_existence_sth->err ) {
+         mylog_err ($check_row_existence_sth->errstr);
+         return %result;
+      }
       if ( $rowCount == 0 ) {
          # Save new user mail into hash if it does not exists
          mylog_info ("Inserting $user, $client_ip, $cc");
-         my $insert_sth = $dbh->prepare($insert_st) or mylog_err ($dbh->errstr);
-         $insert_sth->execute($user, $client_ip, $cc, localtime(time())->strftime('%F %T')) or mylog_err ($insert_sth->errstr);
+         my $insert_sth = $dbh->prepare($insert_st)                                          or do { mylog_err($dbh->errstr); return %result; };
+         $insert_sth->execute($user, $client_ip, $cc, localtime(time())->strftime('%F %T'))  or do { mylog_err($insert_sth->errstr); return %result; };
       }
       else {
          # Increment or initialize login count for user and given IP/country
          mylog_info ("Incrementing $user, $client_ip, $cc");
-         my $increment_sth = $dbh->prepare($increment_st) or mylog_err ($dbh->errstr);
-         $increment_sth->execute(localtime(time())->strftime('%F %T'), $user, $client_ip, $cc) or mylog_err ($increment_sth->errstr);
+         my $increment_sth = $dbh->prepare($increment_st)                                       or do { mylog_err($dbh->errstr); return %result; };
+         $increment_sth->execute(localtime(time())->strftime('%F %T'), $user, $client_ip, $cc)  or do { mylog_err ($increment_sth->errstr); return %result; };
       }
 
       # Get number of logins from given IP
-      my $login_count_from_country_sth = $dbh->prepare($login_count_from_country_st) or mylog_err ($dbh->errstr);
+      my $login_count_from_country_sth = $dbh->prepare($login_count_from_country_st) or do { mylog_err($dbh->errstr); return %result; };
       if ( !($login_count_from_country_sth->execute($user, $client_ip, $cc)) ) {
          mylog_err ($login_count_from_country_sth->errstr);
          return %result;
@@ -206,7 +210,7 @@ my $flush_interval = DAY;
       }
 
       # Check if user with given IP already has record
-      my $check_user_existence_sth = $dbh->prepare($check_user_existence_st) or mylog_err ($dbh->errstr);
+      my $check_user_existence_sth = $dbh->prepare($check_user_existence_st) or do { mylog_err($dbh->errstr); return %result; };
       my $rowCount = $check_user_existence_sth->execute($user);
       if ( $rowCount == 0 ) {
          if ( $check_user_existence_sth->err ) {
@@ -216,7 +220,7 @@ my $flush_interval = DAY;
       }
 
       # Get number of unique countries from which has user logged in
-      my $num_countries_logs_sth = $dbh->prepare($num_countries_logs_st) or mylog_err ($dbh->errstr);
+      my $num_countries_logs_sth = $dbh->prepare($num_countries_logs_st) or do { mylog_err($dbh->errstr); return %result; };
       if ( !($num_countries_logs_sth->execute($user)) ) {
          mylog_err ($num_countries_logs_sth->errstr);
          return %result;
