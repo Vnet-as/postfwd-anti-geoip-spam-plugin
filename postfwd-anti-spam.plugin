@@ -1,24 +1,5 @@
 #!/usr/bin/perl
 
-# TODO:
-# 1. Test with IPv6 addresses
-# 2. Encrypt DB Password or store to file (DBIx)
-# 3. Logging with Log4Perl
-# 4. Dump database in intervals to supply logs for analyse.
-
-# Anti spam botnet postfwd configuration:
-# id=COUNTRY_LOGIN_COUNT ; \
-#   sasl_username=~^(.+)$ ; \
-#   incr_client_country_login_count != 0 ; \
-#   action=dunno
-# id=BAN_BOTNET ; \
-#   sasl_username=~^(.+)$ ; \
-#   client_uniq_country_login_count > 5 ; \
-#   action=rate(sasl_username/1/3600/554 Your mail account $$sasl_username was compromised. Please change your password immediately after next login.)
-
-#use strict;
-#use warnings;
-
 # Geo IP
 use Geo::IP;
 my $gi = Geo::IP->new(GEOIP_MEMORY_CACHE);
@@ -35,48 +16,33 @@ my $log_filename = '/tmp/postfwd_plugin.log';
 open( my $log_file_fh, '>>', $log_filename ) or die "ERROR: Could not open file '$log_filename' $!\n";
 $log_file_fh->autoflush;
 
-# Enable or disable logging
+# Enable(1) or disable(0) logging
 use constant DEBUG => 1;
 
-sub mylog_info {
+sub mylog {
+   my ($log_level, @errstr) = @_;
    if (DEBUG) {
       my $date = localtime(time())->strftime('%F %T');
-      my $str = "$date INFO: ";
-      foreach my $s (@_) {
+      my $finalStr = "$date $log_level: ";
+      foreach my $s (@errstr) {
          if ( length $s ) {
-            $str = $str . $s;
+            $finalStr = $finalStr . $s;
          }
       }
-      $str = $str . "\n";
-      print $log_file_fh $str;
-   }
+      $finalStr = $finalStr . "\n";
+      print $log_file_fh $finalStr;
+   }   
+}
+
+sub mylog_info {
+   mylog("INFO", @_);
 }
 sub mylog_err {
-   if (DEBUG) {
-      my $date = localtime(time())->strftime('%F %T');
-      my $str = "$date ERROR: ";
-      foreach my $s (@_) {
-         if ( length $s ) {
-            $str = $str . $s;
-         }
-      }
-      $str = $str . "\n";
-      print $log_file_fh $str;
-   }
+   mylog("ERROR", @_);
 }
 sub mylog_fatal {
-   if (DEBUG) {
-      my $date = localtime(time())->strftime('%F %T');
-      my $str = "$date FATAL: ";
-      foreach my $s (@_) {
-         if ( length $s ) {
-            $str = $str . $s;
-         }
-      }
-      $str = $str . "\n";
-      print $log_file_fh $str;
-      exit -1;
-   }
+   mylog("FATAL", @_);
+   exit -1;
 }
 
 # SQL Statements
@@ -91,17 +57,15 @@ my $create_table_st = "CREATE TABLE if NOT EXISTS $table_name (
 my $drop_table_st = "DROP TABLE $table_name";
 my $clear_table_st = "TRUNCATE TABLE $table_name";
 my $delete_old_logins = "DELETE FROM $table_name WHERE ( UNIX_TIMESTAMP(NOW()) - UNIX_TIMESTAMP(last_login) ) > ?;";
-my $check_row_existence_st = "SELECT * FROM $table_name WHERE sasl_username=? AND ip_address=? AND state_code=?;";
-my $check_user_existence_st = "SELECT * FROM $table_name WHERE sasl_username=?;";
+my $check_row_existence_st = "SELECT COUNT(*) FROM $table_name WHERE sasl_username=? AND ip_address=? AND state_code=? LIMIT 1;";
+my $check_user_existence_st = "SELECT COUNT(*) FROM $table_name WHERE sasl_username=? LIMIT 1;";
 my $insert_st = "INSERT INTO $table_name (sasl_username, ip_address, state_code, login_count, last_login) VALUES (?, ?, ?, 1, ?);";
 my $increment_st = "UPDATE $table_name SET login_count=login_count + 1, last_login=? WHERE sasl_username=? AND ip_address=? AND state_code=?;";
 my $login_count_from_country_st = "SELECT login_count FROM $table_name WHERE sasl_username=? AND ip_address=? AND state_code=?;";
 my $num_countries_logs_st = "SELECT COUNT(DISTINCT state_code) FROM $table_name WHERE sasl_username=?;";
 
-# Start log
-mylog_info ("Starting postfwd plugin");
-
 # DB connection - Update values to your DB connection
+# my $driver = "Pg"; 
 my $driver = "mysql"; 
 my $database = "";
 my $host = "";
@@ -109,10 +73,13 @@ my $port = "";
 my $dsn = "DBI:$driver:database=$database;host=$host;port=$port";
 my $userid = "";
 my $password = "";
+my %attr = ( RaiseError => 0, PrintError => 1, AutoCommit => 1 );
+
+# Start log
+mylog_info ("Starting postfwd plugin with dsn '$dsn'");
 
 # Connect
-my $dbh = DBI->connect($dsn, $userid, $password, { RaiseError => 0, AutoCommit => 1 }) or mylog_fatal ($DBI::errstr);
-$dbh->{mysql_auto_reconnect} = 1;
+my $dbh = DBI->connect($dsn, $userid, $password, \%attr) or mylog_fatal ($DBI::errstr);
 
 # Create table "postfwd_logins" if it does not exists
 mylog_info ("Creating table postfwd_logins if it does not exists");
@@ -137,11 +104,20 @@ my $flush_interval = DAY;
       my(%result) = ();
       $result{incr_client_country_login_count} = 0;
 
-      # Clear user mail and countries login count cache after flush interval expirates
+      # Test if database connection is still alive
+      my $rc = $dbh->ping;
+      if ( !$rc ) {
+         mylog_info("Database connection dropped (rc=$rc). Reconnecting to database.");
+         $dbh = DBI->connect_cached($dsn, $userid, $password, \%attr) or mylog_fatal ($DBI::errstr);
+      }
+
+      # Clear old records after flush interval expirates
       if ( ($last_cache_flush + DAY) < time() ) {
          mylog_info ("Removing records which are older than $flush_interval");
+         
          my $clear_table_sth = $dbh->prepare($delete_old_logins) or mylog_err ($dbh->errstr);
          $clear_table_sth->execute($flush_interval) or mylog_err ($clear_table_sth->errstr);
+
          mylog_info ("DB cleared!");
          $last_cache_flush = time();
       }
@@ -166,15 +142,15 @@ my $flush_interval = DAY;
       }
 
       # Check if user with given IP already has record
-      my $check_row_existence_sth = $dbh->prepare($check_row_existence_st);
-      my $rv = $check_row_existence_sth->execute($user, $client_ip, $cc);
-      if ( !$rv ) {
-         mylog_err ($rv->errstr);
+      my $check_row_existence_sth = $dbh->prepare($check_row_existence_st) or mylog_err ($dbh->errstr);
+      if ( !($check_row_existence_sth->execute($user, $client_ip, $cc)) ) {
+         mylog_err ($check_row_existence_sth->errstr);
          return %result;
       }
 
       # Check how many rows was returned (0 or more)
-      if ( $rv == 0 ) {
+      my $rowCount = $check_row_existence_sth->fetchrow_array;
+      if ( $rowCount == 0 ) {
          # Save new user mail into hash if it does not exists
          mylog_info ("Inserting $user, $client_ip, $cc");
          my $insert_sth = $dbh->prepare($insert_st) or mylog_err ($dbh->errstr);
@@ -189,14 +165,17 @@ my $flush_interval = DAY;
 
       # Get number of logins from given IP
       my $login_count_from_country_sth = $dbh->prepare($login_count_from_country_st) or mylog_err ($dbh->errstr);
-      $login_count_from_country_sth->execute($user, $client_ip, $cc) or do {
+      if ( !($login_count_from_country_sth->execute($user, $client_ip, $cc)) ) {
          mylog_err ($login_count_from_country_sth->errstr);
          return %result;
       };
 
+      # Fetch number of logins from sth
       $result{incr_client_country_login_count} = $login_count_from_country_sth->fetchrow_array;
       if ( !$result{incr_client_country_login_count} ) {
-         mylog_err ($login_count_from_country_sth->errstr);
+         if ( $login_count_from_country_sth->err ) {
+            mylog_err ($login_count_from_country_sth->errstr);
+         }
          return %result;
       }
 
@@ -213,6 +192,13 @@ my $flush_interval = DAY;
       my(%result) = ();
       $result{client_uniq_country_login_count} = 0;
       
+      # Test if database connection is still alive
+      my $rc = $dbh->ping;
+      if ( !$rc ) {
+         mylog_info("Database connection dropped (rc=$rc). Reconnecting to database.");
+         $dbh = DBI->connect_cached($dsn, $userid, $password, \%attr) or mylog_fatal ($DBI::errstr);
+      }
+
       # Get sasl_username
       my $user = $request{sasl_username};
       if ( !length $user || !($user) ) {
@@ -220,28 +206,34 @@ my $flush_interval = DAY;
       }
 
       # Check if user with given IP already has record
-      my $check_user_existence_sth = $dbh->prepare($check_user_existence_st);
-      my $rv = $check_user_existence_sth->execute($user);
-      if ( !$rv ) {
-         mylog_err ($check_user_existence_sth->errstr);
+      my $check_user_existence_sth = $dbh->prepare($check_user_existence_st) or mylog_err ($dbh->errstr);
+      my $rowCount = $check_user_existence_sth->execute($user);
+      if ( $rowCount == 0 ) {
+         if ( $check_user_existence_sth->err ) {
+            mylog_err ($check_user_existence_sth->errstr);
+         }
          return %result;
       }
 
-      # Get number of unique countries from which has user logged
-      my $num_countries_logs_sth = $dbh->prepare($num_countries_logs_st);
+      # Get number of unique countries from which has user logged in
+      my $num_countries_logs_sth = $dbh->prepare($num_countries_logs_st) or mylog_err ($dbh->errstr);
       if ( !($num_countries_logs_sth->execute($user)) ) {
          mylog_err ($num_countries_logs_sth->errstr);
          return %result;
       }
 
+      # Get first row of data
       $result{client_uniq_country_login_count} = $num_countries_logs_sth->fetchrow_array;
       if ( !$result{client_uniq_country_login_count} ) {
-         mylog_err ($num_countries_logs_sth->errstr);
+         if ( $num_countries_logs_sth->err ) {
+            mylog_err ($num_countries_logs_sth->errstr);
+         }
          return %result;
       }
       
+      # Print unique number of countries that user was logged in from
       if ( $result{client_uniq_country_login_count} > $uniq_country_login_count_limit ) {
-         mylog_info ("User $user is logged from more than $uniq_country_login_count_limit countries($result{client_uniq_country_login_count})");
+         mylog_info ("User $user was logged from more than $uniq_country_login_count_limit countries($result{client_uniq_country_login_count})");
       }
       else {
          mylog_info ("Number of unique countries logged in from user [$user]: $result{client_uniq_country_login_count}");
