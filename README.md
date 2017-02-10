@@ -1,22 +1,22 @@
 # **Table of Contents**
 
 (*generated with [DocToc](http://doctoc.herokuapp.com/)*)
-- [Postfwd GeoIP Botnet Block Plugin](#)
-   - [Installation](#)
-   - [Dependencies](#)
-         - [RedHat based distributions](#)
-         - [Debian based distributions](#)
-   - [Configuration](#)
-            - [Database backend configuration](#)
-            - [Database cleanup period](#)
-            - [Logging](#)
-   - [Useful database queries](#)
-   - [Automatic Tests (In progress)](#)
-   - [TODO list](#)
+- [Postfwd GeoIP Botnet Block Plugin](#postfwd-geoip-botnet-block-plugin)
+   - [Installation](#installation)
+   - [Dependencies](#dependencies)
+      - [RedHat based distributions](#redhat-based-distributions)
+      - [Debian based distributions](#debian-based-distributions)
+   - [Configuration](#configuration)
+      - [Database backend configuration](#database-backend-configuration)
+      - [Database cleanup period](#database-cleanup-period)
+      - [Logging](#logging)
+   - [Useful database queries](#useful-database-queries)
+   - [Automatic Tests (In progress)](#-automatic-tests-in-progress))
+   - [TODO list](#todo-list)
 
 # Postfwd GeoIP Botnet Block Plugin
 
-This is plugin to postfix firewall `postfwd` intended to block international spam botnets. International spam botnets are logging into hacked mail addresses via sasl login from multiple IP addresses based in usually more than 30 unique countries. After successful login, the hackers send spam from many unique IP addresses which circumvents traditional rate limits per IP address.
+This is plugin to postfix firewall `postfwd` (http://postfwd.org/) intended to block international spam botnets. International spam botnets are logging into hacked mail addresses via sasl login from multiple IP addresses based in usually more than 30 unique countries. After successful login, the hackers send spam from many unique IP addresses which circumvents traditional rate limits per IP address.
 
 ## Installation
 
@@ -25,6 +25,7 @@ For installation follow next steps and also instructions in section [dependencie
 - Install dependencies according to chapter `Dependencies`. 
 - To load plugin to postfwd you must add argument `--plugins <PATH TO PLUGIN>` to postfwd command. 
 - Add following rules to postfwd configuration file `postfwd.cf`. You can use your own message and parameter value `client_uniq_country_login_count` which sets maximum number of unique countries to allow user to log in via sasl. 
+- Create database table with indexes (database is created on plugin startup but indexes are not)
 
 ```
 # Anti spam botnet rule
@@ -39,8 +40,6 @@ id=BAN_BOTNET ; \
    client_uniq_country_login_count > 5 ; \
    action=rate(sasl_username/1/3600/554 Your mail account $$sasl_username was compromised. Please change your password immediately after next login.)
 ```
-
-Create database table with indexes (Optional, because if database is not created it is always created on plugin startup)
 
 ```
 CREATE TABLE IF NOT EXISTS postfwd_logins (
@@ -63,24 +62,36 @@ CREATE INDEX postfwd_sasl_username ON postfwd_logins (sasl_username);
 
 #### RedHat based distributions 
 
-Install *GeoIP* and *Time* module with `yum install -y perl\(Geo::IP\) perl\(Time::Piece\)`
-If you use Mysql backend, install DBD mysql module `yum install 'perl(DBD::mysql)'`
-If you use PostgreSQL backend, DBD mysql module `yum install 'perl(DBD::Pg)'`
-For other backends, please refer to DBD modules on CPAN.
+* Install *GeoIP* and *Time* module with `yum install -y perl\(Geo::IP\) perl\(Time::Piece\)`.
+
+
+* If you use Mysql backend, install DBD mysql module `yum install 'perl(DBD::mysql)'`.
+
+
+* If you use PostgreSQL backend, DBD mysql module `yum install 'perl(DBD::Pg)'`.
+
+
+* For other backends, please refer to DBD modules on CPAN.
 
 #### Debian based distributions 
 
-Install *GeoIP* and *Time* module with `apt-get install -y libgeo-ip-perl libtime-piece-perl`
-If you use Mysql backend, install DBD mysql module `apt-get install -y libdbd-mysql-perl`
-If you use PostgreSQL backend, DBD mysql module `apt-get install -y libdbd-pg-perl`
-For other backends, please refer to DBD modules on CPAN.
+* Install *GeoIP* and *Time* module with `apt-get install -y libgeo-ip-perl libtime-piece-perl`.
+
+
+* If you use Mysql backend, install DBD mysql module `apt-get install -y libdbd-mysql-perl`.
+
+
+* If you use PostgreSQL backend, DBD mysql module `apt-get install -y libdbd-pg-perl`.
+
+
+* For other backends, please refer to DBD modules on CPAN.
 
 
 ## Configuration
 
-##### Database backend configuration
+#### Database backend configuration
 
-First configure database backend with your credentials (eg. mysql). Use proper driver and port if you are using different backend.
+Change configuration in the plugin file `postfwd-anti-spam.plugin` with your credentials to selected database backend (tested with mysql/postgresql). Don't forget to use proper driver and port.
 
 ```
 # my $driver = "Pg"; 
@@ -93,14 +104,13 @@ my $dsn = "DBI:$driver:database=$database;host=$host;port=$port";
 my $userid = "testuser";
 my $password = "password";
 ```
-##### Database cleanup period
+#### Database cleanup period
 
-The database is by default set to remove records for users with last login date older than 24 hours, but can be changed within code to arbitrary time period (DAY, WEEK, MONTH...) by changing variable `$flush_interval`.
+The plugin is by default configured to remove records for users with last login date older than 24 hours. This interval can be changed within code to arbitrary time period (DAY, WEEK, MONTH...) by changing variable `$flush_interval`.
 
-##### Logging
+#### Logging
 
-By default logging for debuging purposes is enabled. Log file is located in `/tmp/postfwd_plugin.log`.
-You can disable logging by changing `use constant DEBUG => 1;` to `use constant DEBUG => 0;`
+By default logging for debuging purposes is enabled. Log file is located in `/tmp/postfwd_plugin.log`. You can disable logging by changing `use constant DEBUG => 1;` to `use constant DEBUG => 0;`
 
 ## Useful database queries 
 
@@ -115,7 +125,7 @@ GROUP BY sasl_username
 HAVING country_login_count > 3;
 ```
 
-1. Print users who are logged in from more than 1 country and write number of countries from which they were logged in
+2. Print users who are logged in from more than 1 country and write number of countries from which they were logged in
 ```
 SELECT sasl_username, COUNT(DISTINCT state_code) AS country_login_count 
 FROM postfwd_logins 
@@ -123,7 +133,7 @@ GROUP BY sasl_username
 HAVING country_login_count > 1;
 ```
 
-2. Dump all IP addresses and login counts for users who were logged in from more than 1 country
+3. Dump all IP addresses and login counts for users who were logged in from more than 1 country
 ```
 SELECT * FROM postfwd_logins 
 JOIN (
@@ -136,28 +146,28 @@ JOIN (
 ORDER BY postfwd_logins.sasl_username;
 ```
 
-3. SUM of logins for user <SASL_USERNAME>
+4. SUM of logins for user <SASL_USERNAME>
 ```
 SELECT SUM(login_count) 
 FROM postfwd_logins 
 WHERE sasl_username='<SASL_USERNAME>';
 ```
 
-4. COUNT of distinct login *state_codes* for user <SASL_USERNAME>
+5. COUNT of distinct login *state_codes* for user <SASL_USERNAME>
 ```
 SELECT COUNT(DISTINCT state_code) 
 FROM postfwd_logins 
 WHERE sasl_username='<SASL_USERNAME>';
 ```
 
-5. COUNT of distinct IP addresses for user <SASL_USERNAME>
+6. COUNT of distinct IP addresses for user <SASL_USERNAME>
 ```
 SELECT COUNT(DISTINCT ip_address) 
 FROM postfwd_logins 
 WHERE sasl_username='<SASL_USERNAME>';
 ```
 
-6. COUNT of IP addresses for each *state_code* for user <SASL_USERNAME>
+7. COUNT of IP addresses for each *state_code* for user <SASL_USERNAME>
 ```
 SELECT sasl_username, state_code, COUNT(state_code) AS country_login_count 
 FROM postfwd_logins 
