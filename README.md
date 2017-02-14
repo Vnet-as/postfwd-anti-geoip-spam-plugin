@@ -18,6 +18,8 @@
 
 This is plugin to postfix firewall `postfwd` (http://postfwd.org/) intended to block international spam botnets. International spam botnets are logging into hacked mail addresses via sasl login from multiple IP addresses based in usually more than 30 unique countries. After successful login, the hackers send spam from many unique IP addresses which circumvents traditional rate limits per IP address.
 
+If you are interested in theory of how botnet spam works and motivation for creating this plugin, check the blog and tutorial on [HowToForge](https://www.howtoforge.com/tutorial/blocking-of-international-spam-botnets-postfix-plugin/).
+
 ## Installation
 
 For installation follow next steps and also instructions in section [dependencies](#dependencies)
@@ -114,7 +116,8 @@ By default logging for debuging purposes is enabled. Log file is located in `/tm
 
 ## Useful database queries 
 
-1. Print mail accounts, total number of logins, total number of unique ip addresses and unique states for users who were logged in from more than 3 countries (Most useful for me)
+##### 1. Print mail accounts, total number of logins, total number of unique ip addresses and unique states for users who were logged in from more than 3 countries (Most useful for me) 
+
 ```
 SELECT sasl_username, 
    SUM(login_count), 
@@ -125,7 +128,8 @@ GROUP BY sasl_username
 HAVING country_login_count > 3;
 ```
 
-2. Print users who are logged in from more than 1 country and write number of countries from which they were logged in
+##### 2. Print users who are logged in from more than 1 country and write number of countries from which they were logged in 
+
 ```
 SELECT sasl_username, COUNT(DISTINCT state_code) AS country_login_count 
 FROM postfwd_logins 
@@ -133,7 +137,8 @@ GROUP BY sasl_username
 HAVING country_login_count > 1;
 ```
 
-3. Dump all IP addresses and login counts for users who were logged in from more than 1 country
+##### 3. Dump all IP addresses and login counts for users who were logged in from more than 1 country
+
 ```
 SELECT * FROM postfwd_logins 
 JOIN (
@@ -146,28 +151,28 @@ JOIN (
 ORDER BY postfwd_logins.sasl_username;
 ```
 
-4. SUM of logins for user <SASL_USERNAME>
+##### 4. SUM of logins for user <SASL_USERNAME>
 ```
 SELECT SUM(login_count) 
 FROM postfwd_logins 
 WHERE sasl_username='<SASL_USERNAME>';
 ```
 
-5. COUNT of distinct login *state_codes* for user <SASL_USERNAME>
+##### 5. COUNT of distinct login *state_codes* for user <SASL_USERNAME>
 ```
 SELECT COUNT(DISTINCT state_code) 
 FROM postfwd_logins 
 WHERE sasl_username='<SASL_USERNAME>';
 ```
 
-6. COUNT of distinct IP addresses for user <SASL_USERNAME>
+##### 6. COUNT of distinct IP addresses for user <SASL_USERNAME>
 ```
 SELECT COUNT(DISTINCT ip_address) 
 FROM postfwd_logins 
 WHERE sasl_username='<SASL_USERNAME>';
 ```
 
-7. COUNT of IP addresses for each *state_code* for user <SASL_USERNAME>
+##### 7. COUNT of IP addresses for each *state_code* for user <SASL_USERNAME>
 ```
 SELECT sasl_username, state_code, COUNT(state_code) AS country_login_count 
 FROM postfwd_logins 
