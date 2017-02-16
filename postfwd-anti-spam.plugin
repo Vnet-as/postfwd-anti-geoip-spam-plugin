@@ -130,7 +130,12 @@ my $flush_interval = DAY;
 
       # Get client address
       my $client_ip = $request{client_address};
-      if ( !length $client_ip ) {
+      if ( !length $client_ip || !($client_ip) ) {
+         return %result;
+      }
+      # Simple regex test if string looks like IP address
+      if ( !($client_ip =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/) ) {
+         mylog_info ("'$client_ip' is not valid IP address");
          return %result;
       }
 

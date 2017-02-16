@@ -1,6 +1,5 @@
 # **Table of Contents**
 
-(*generated with [DocToc](http://doctoc.herokuapp.com/)*)
 - [Postfwd GeoIP Botnet Block Plugin](#postfwd-geoip-botnet-block-plugin)
    - [Installation](#installation)
    - [Dependencies](#dependencies)
@@ -11,14 +10,18 @@
       - [Database cleanup period](#database-cleanup-period)
       - [Logging](#logging)
    - [Useful database queries](#useful-database-queries)
-   - [Automatic Tests (In progress)](#-automatic-tests-in-progress))
+   - [Automatic Tests (In progress)](#-automatic-tests-in-progress)
    - [TODO list](#todo-list)
 
 # Postfwd GeoIP Botnet Block Plugin
 
-This is plugin to postfix firewall `postfwd` (http://postfwd.org/) intended to block international spam botnets. International spam botnets are logging into hacked mail addresses via sasl login from multiple IP addresses based in usually more than 30 unique countries. After successful login, the hackers send spam from many unique IP addresses which circumvents traditional rate limits per IP address.
+This is plugin to postfix firewall `postfwd` (http://postfwd.org/) intended to block international spam botnets. International spam botnets are logging into hacked mail addresses via sasl login from multiple IP addresses based in usually more than 30 unique countries. After successful login, the hackers send spam from huge amount of unique IP addresses which circumvents traditional rate limits per IP address.
 
 If you are interested in theory of how botnet spam works and motivation for creating this plugin, check the blog and tutorial on [HowToForge](https://www.howtoforge.com/tutorial/blocking-of-international-spam-botnets-postfix-plugin/).
+
+If you are interested in how your users got their mail accounts hacked, check out `bsdly` blog about slow distributed brute force attack on SSH passwords, which also applies to pop3/imap logins [Hail Mary Cloud](http://bsdly.blogspot.sk/2013/10/the-hail-mary-cloud-and-lessons-learned.html).
+
+Plugin is tested with `postfwd2 ver. 1.35` with `MySQL` and `PostgreSQL` backend. 
 
 ## Installation
 
@@ -32,15 +35,29 @@ For installation follow next steps and also instructions in section [dependencie
 ```
 # Anti spam botnet rule
 # This example shows how to limit e-mail address defined by `sasl_username` to be able to login from max. 5 different countries, otherwise they will be blocked to send messages.
+
+&&PRIVATE_RANGES { \
+   client_address=!!(10.0.0.0/8) ; \
+   client_address=!!(172.16.0.0/12) ; \
+   client_address=!!(192.168.0.0/16) ; \
+};
+&&LOOPBACK_RANGE { \
+   client_address=!!(127.0.0.0/8) ; \
+};
+
 id=COUNTRY_LOGIN_COUNT ; \
    sasl_username=~^(.+)$ ; \
+   &&PRIVATE_RANGES ; \
+   &&LOOPBACK_RANGE ; \
    incr_client_country_login_count != 0 ; \
    action=dunno
 
 id=BAN_BOTNET ; \
    sasl_username=~^(.+)$ ; \
+   &&PRIVATE_RANGES ; \
+   &&LOOPBACK_RANGE ; \
    client_uniq_country_login_count > 5 ; \
-   action=rate(sasl_username/1/3600/554 Your mail account $$sasl_username was compromised. Please change your password immediately after next login.)
+   action=rate(sasl_username/1/3600/554 Your mail account ($$sasl_username) was compromised. Please change your password immediately after next login.)
 ```
 
 ```
@@ -208,8 +225,5 @@ tests/01-basic-random-ip-test.pl
 ## TODO list
 
 1. Test with IPv6 addresses
-2. Encrypt DB Password or store to file (DBIx)
-3. Logging with Log4Perl
-4. Dump database in intervals to supply logs for analysis.
-5. Automatic testing
-
+2. Automatic testing
+3. Add configuration file
