@@ -21,16 +21,18 @@ If you are interested in theory of how botnet spam works and motivation for crea
 
 If you are interested in how your users got their mail accounts hacked, check out `bsdly` blog about slow distributed brute force attack on SSH passwords, which also applies to pop3/imap logins [Hail Mary Cloud](http://bsdly.blogspot.sk/2013/10/the-hail-mary-cloud-and-lessons-learned.html).
 
-Plugin is tested with `postfwd2 ver. 1.35` with `MySQL` and `PostgreSQL` backend. 
+Plugin was tested with `postfwd2 ver. 1.35` with `MySQL` and `PostgreSQL` backend. 
 
 ## Installation
 
-For installation follow next steps and also instructions in section [dependencies](#dependencies)
-- Copy plugin to your mail server. 
-- Install dependencies according to chapter `Dependencies`. 
-- To load plugin to postfwd you must add argument `--plugins <PATH TO PLUGIN>` to postfwd command. 
+For installation follow next steps
+- Clone this repository.
+- Copy configuration file `anti-spam.conf` to `/etc/postfix/anti-spam.conf` and update configuration according to section [Configuration](#Configuration).
+- Copy SQL statements file `anti-spam-sql-st.conf` to `/etc/postfix/anti-spam-sql-st.conf`.
+- Ensure that configuration files are readable by user which runs `postfwd` (usually user `postfw`) and that plugin file is also readable by him.
+- Install dependencies according to chapter [Dependencies](#dependencies).
+- To load plugin to postfwd you must add argument `--plugins <PATH TO PLUGIN>` to postfwd command (eg. in /etc/default/postfwd). 
 - Add following rules to postfwd configuration file `postfwd.cf`. You can use your own message and parameter value `client_uniq_country_login_count` which sets maximum number of unique countries to allow user to log in via sasl. 
-- Create database table with indexes (database is created on plugin startup but indexes are not)
 
 ```
 # Anti spam botnet rule
@@ -60,6 +62,8 @@ id=BAN_BOTNET ; \
    action=rate(sasl_username/1/3600/554 Your mail account ($$sasl_username) was compromised. Please change your password immediately after next login.)
 ```
 
+- Create database table with indexes (database is created on plugin startup but indexes are not).
+
 ```
 CREATE TABLE IF NOT EXISTS postfwd_logins (
    sasl_username varchar(100),
@@ -77,11 +81,12 @@ CREATE INDEX postfwd_sasl_username ON postfwd_logins (sasl_username);
 * Geo::IP
 * DBI
 * Time::Piece
+* Config::Any
 
 
 #### RedHat based distributions 
 
-* Install *GeoIP* and *Time* module with `yum install -y perl\(Geo::IP\) perl\(Time::Piece\)`.
+* Install *GeoIP*, *Time* and *Config* module with `yum install -y perl\(Geo::IP\) perl\(Time::Piece\) perl\(Config::Any\)`.
 
 
 * If you use Mysql backend, install DBD mysql module `yum install 'perl(DBD::mysql)'`.
@@ -94,7 +99,7 @@ CREATE INDEX postfwd_sasl_username ON postfwd_logins (sasl_username);
 
 #### Debian based distributions 
 
-* Install *GeoIP* and *Time* module with `apt-get install -y libgeo-ip-perl libtime-piece-perl`.
+* Install *GeoIP*, *Time* and *Config* module with `apt-get install -y libgeo-ip-perl libtime-piece-perl libconfig-any-perl`.
 
 
 * If you use Mysql backend, install DBD mysql module `apt-get install -y libdbd-mysql-perl`.
@@ -108,32 +113,49 @@ CREATE INDEX postfwd_sasl_username ON postfwd_logins (sasl_username);
 
 ## Configuration
 
+Copy configuration file `anti-spam.conf` to `/etc/postfix/anti-spam.conf` and also file `anti-spam-sql-st.conf` to `/etc/postfix/anti-spam-sql-st.conf`.
+
 #### Database backend configuration
 
-Change configuration in the plugin file `postfwd-anti-spam.plugin` with your credentials to selected database backend (tested with mysql/postgresql). Don't forget to use proper driver and port.
+Update configuration file with your credentials to selected database backend (tested with mysql/postgresql). Don't forget to use proper driver and port.
 
 ```
-# my $driver = "Pg"; 
-my $driver = "mysql"; 
-my $database = "test";
-my $host = "127.0.0.1";
-my $port = "3306";
-# my $port = "5432";
-my $dsn = "DBI:$driver:database=$database;host=$host;port=$port";
-my $userid = "testuser";
-my $password = "password";
+[database]
+# driver = Pg
+driver = mysql
+database = test
+host = localhost
+# port = 5432
+port = 3306
+userid = testuser
+password = password
 ```
 #### Database cleanup period
 
-The plugin is by default configured to remove records for users with last login date older than 24 hours. This interval can be changed within code to arbitrary time period (DAY, WEEK, MONTH...) by changing variable `$flush_interval`.
+The plugin is by default configured to remove records for users with last login date older than 24 hours. This interval can be changed in configuration file.
+
+```
+[app]
+# Flush database records with last login older than 1 day
+db_flush_interval = 86400  
+```
 
 #### Logging
 
-By default logging for debuging purposes is enabled. Log file is located in `/tmp/postfwd_plugin.log`. You can disable logging by changing `use constant DEBUG => 1;` to `use constant DEBUG => 0;`
+By default logging for debuging purposes is enabled. Log file is located in `/tmp/postfwd_plugin.log`. You can disable logging by updating configuration file.
+
+```
+[debugging]
+# Enable(1) or disable(0) logging
+debug = 1
+# Make log after exceeding unique country count limit
+country_limit = 5
+
+```
 
 ## Useful database queries 
 
-##### 1. Print mail accounts, total number of logins, total number of unique ip addresses and unique states for users who were logged in from more than 3 countries (Most useful for me) 
+##### 1. Print mail accounts, total number of logins, total number of unique ip addresses and unique states for users who were logged in from more than 3 countries (Most useful for me)
 
 ```
 SELECT sasl_username, 
@@ -219,11 +241,13 @@ GRANT ALL PRIVILEGES ON DATABASE test to testuser;
 Execute test case with default credentials
 
 ```
-tests/01-basic-random-ip-test.pl
+tests/02-test-while-disconnect.pl
 ```
 
 ## TODO list
 
 1. Test with IPv6 addresses
 2. Automatic testing
-3. Add configuration file
+3. Put logging into separate module file
+4. Add auto installation script
+5. Test with sqlite database

@@ -23,7 +23,6 @@ my %config_sql = %$config_sql_ref;
 
 # Logging
 open( my $log_file_fh, '>>', $config{logging}{logfile} ) or die "ERROR: Could not open file '$config{logging}{logfile}' $!\n";
-$log_file_fh->autoflush;
 
 sub mylog {
    my ($log_level, @errstr) = @_;
@@ -70,7 +69,7 @@ $create_table_sth->execute()                                         or mylog_fa
 # Setup initial time for flushing database records older than interval set in config file
 my $last_cache_flush = time();
 
-%postfwd_items_plugin = (
+my %postfwd_items_plugin = (
 
    "incr_client_country_login_count" => sub {
 
@@ -120,7 +119,7 @@ my $last_cache_flush = time();
          return %result;
       }
       else {
-         if ( !length $cc || !($cc) ) {
+         if ( !length $cc || !$cc ) {
             mylog_info ("Country code for IP address [$client_ip] is empty");
             return %result;
          }
@@ -142,18 +141,18 @@ my $last_cache_flush = time();
       if ( $rowCount == 0 ) {
          # Save new user mail into hash if it does not exists
          mylog_info ("Inserting $user, $client_ip, $cc");
-         my $insert_sth = $dbh->prepare($config_sql{insert_st})                                    or do { mylog_err($dbh->errstr); return %result; };
-         $insert_sth->execute($user, $client_ip, $cc, localtime(time())->strftime('%F %T'))        or do { mylog_err($insert_sth->errstr); return %result; };
+         my $insert_sth = $dbh->prepare($config_sql{insert_st})                                     or do { mylog_err($dbh->errstr); return %result; };
+         $insert_sth->execute($user, $client_ip, $cc, localtime(time())->strftime('%F %T'))     or do { mylog_err($insert_sth->errstr); return %result; };
       }
       else {
          # Increment or initialize login count for user and given IP/country
          mylog_info ("Incrementing $user, $client_ip, $cc");
-         my $increment_sth = $dbh->prepare($config_sql{increment_st})                              or do { mylog_err($dbh->errstr); return %result; };
-         $increment_sth->execute(localtime(time())->strftime('%F %T'), $user, $client_ip, $cc)     or do { mylog_err ($increment_sth->errstr); return %result; };
+         my $increment_sth = $dbh->prepare($config_sql{increment_st})                               or do { mylog_err($dbh->errstr); return %result; };
+         $increment_sth->execute(localtime(time())->strftime('%F %T'), $user, $client_ip, $cc)  or do { mylog_err ($increment_sth->errstr); return %result; };
       }
 
       # Get number of logins from given IP
-      my $login_count_from_country_sth = $dbh->prepare($config_sql{login_count_from_country_st})   or do { mylog_err($dbh->errstr); return %result; };
+      my $login_count_from_country_sth = $dbh->prepare($config_sql{login_count_from_country_st})    or do { mylog_err($dbh->errstr); return %result; };
       if ( !($login_count_from_country_sth->execute($user, $client_ip, $cc)) ) {
          mylog_err ($login_count_from_country_sth->errstr);
          return %result;
@@ -222,7 +221,7 @@ my $last_cache_flush = time();
       
       # Print unique number of countries that user was logged in from
       if ( $result{client_uniq_country_login_count} > $config{debugging}{country_limit} ) {
-         mylog_info ("User $user was logged from more than $config{debugging}{country_limit} countries($result{client_uniq_country_login_count})");
+         mylog_info ("User $user was logged from more than $config{app}{country_limit} countries($result{client_uniq_country_login_count})");
       }
       else {
          mylog_info ("Number of unique countries logged in from user [$user]: $result{client_uniq_country_login_count}");
@@ -236,3 +235,69 @@ my $last_cache_flush = time();
 );
 
 1;
+
+
+###
+# TEST01
+###
+use String::Random;
+use Time::HiRes qw(usleep nanosleep);
+
+my $randomObject;
+my $randomIp;
+$randomObject = new String::Random;
+
+for ( my $i=0; $i < 100; $i++ ) {
+
+   # sleep n miliseconds
+   usleep(10000);
+   srand($i * time() ^ ($$ + ($$ << 15)));
+
+   $randomIp = $randomObject->randpattern("CCcccccnn");
+   print "randomIp: $randomIp\n";
+   
+   my $ip=join ('.', (int(rand(255))
+            ,int(rand(255))
+            ,int(rand(255))
+            ,int(rand(255)))
+   );
+   print "randomStr: $ip\n";
+   
+   my %request = ( 
+      client_address => $ip,
+      sasl_username => $randomIp,
+   );
+
+   my %result = $postfwd_items_plugin{incr_client_country_login_count}->(%request);
+   %result = $postfwd_items_plugin{client_uniq_country_login_count}->(%request);
+}
+
+# Drop connection from database during sleep
+sleep(30);
+
+for ( my $i=0; $i < 100; $i++ ) {
+
+   # sleep n miliseconds
+   usleep(10000);
+   srand($i * time() ^ ($$ + ($$ << 15)));
+
+   $randomIp = $randomObject->randpattern("CCcccccnn");
+   print "randomIp: $randomIp\n";
+   
+   my $ip=join ('.', (int(rand(255))
+            ,int(rand(255))
+            ,int(rand(255))
+            ,int(rand(255)))
+   );
+   print "randomStr: $ip\n";
+   
+   my %request = ( 
+      client_address => $ip,
+      sasl_username => $randomIp,
+   );
+
+   my %result = $postfwd_items_plugin{incr_client_country_login_count}->(%request);
+   %result = $postfwd_items_plugin{client_uniq_country_login_count}->(%request);
+}
+
+1
