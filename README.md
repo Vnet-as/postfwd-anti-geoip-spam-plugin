@@ -52,8 +52,8 @@ id=COUNTRY_LOGIN_COUNT ; \
    &&PRIVATE_RANGES ; \
    &&LOOPBACK_RANGE ; \
    incr_client_country_login_count != 0 ; \
-   action=dunno
-
+   action=jump(BAN_BOTNET) 
+   
 id=BAN_BOTNET ; \
    sasl_username=~^(.+)$ ; \
    &&PRIVATE_RANGES ; \
