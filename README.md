@@ -141,6 +141,9 @@ debug = 1
 country_limit = 5
 ```
 
+If you use `logrotate` to rotate anti-spam logs, use option `copytruncate` which prevents logging errors when log file is rotated. See issue #6 for more information.
+
+
 ## Useful database queries
 
 ##### 1. Print mail accounts, total number of logins, total number of unique ip addresses and unique states for users who were logged in from more than 3 countries (Most useful for me)
