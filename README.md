@@ -76,7 +76,7 @@ CREATE INDEX postfwd_sasl_username ON postfwd_logins (sasl_username);
 
 Add following rules to postfwd configuration file `postfwd.cf`. You can use your own message and parameter value `client_uniq_country_login_count` which sets maximum number of unique countries to allow user to log in via sasl.
 
-```
+```bash
 # Anti spam botnet rule
 # This example shows how to limit e-mail address defined by `sasl_username` to be able to login from max. 5 different countries, otherwise they will be blocked to send messages.
 
@@ -108,7 +108,7 @@ id=BAN_BOTNET ; \
 
 Update configuration file with your credentials to selected database backend (tested with mysql/postgresql). Don't forget to use proper driver and port.
 
-```
+```INI
 [database]
 # driver = Pg
 driver = mysql
@@ -123,7 +123,7 @@ password = password
 
 The plugin is by default configured to remove records for users with last login date older than 24 hours. This interval can be changed in configuration file.
 
-```
+```INI
 [app]
 # Flush database records with last login older than 1 day
 db_flush_interval = 86400
@@ -133,7 +133,7 @@ db_flush_interval = 86400
 
 By default logging for debuging purposes is enabled. Log file is located in `/tmp/postfwd_plugin.log`. You can disable logging by updating configuration file.
 
-```
+```INI
 [debugging]
 # Enable(1) or disable(0) logging
 debug = 1
