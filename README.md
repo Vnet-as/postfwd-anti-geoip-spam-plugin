@@ -86,7 +86,7 @@ CREATE INDEX postfwd_sasl_username ON postfwd_logins (sasl_username);
 
 #### RedHat based distributions
 
-* Install *GeoIP*, *Time* and *Config* module with `yum install -y perl\(Geo::IP\) perl\(Time::Piece\) perl\(Config::Any\)`.
+* Install *GeoIP*, *Time*, *Config* and *DBI* module with `yum install -y perl\(Geo::IP\) perl\(Time::Piece\) perl\(Config::Any\) perl\(DBI\)`.
 
 
 * If you use Mysql backend, install DBD mysql module `yum install 'perl(DBD::mysql)'`.
@@ -99,7 +99,7 @@ CREATE INDEX postfwd_sasl_username ON postfwd_logins (sasl_username);
 
 #### Debian based distributions
 
-* Install *GeoIP*, *Time* and *Config* module with `apt-get install -y libgeo-ip-perl libtime-piece-perl libconfig-any-perl`.
+* Install *GeoIP*, *Time*, *Config* and *DBI* module with `apt-get install -y libgeo-ip-perl libtime-piece-perl libconfig-any-perl libdbi-perl`.
 
 
 * If you use Mysql backend, install DBD mysql module `apt-get install -y libdbd-mysql-perl`.
@@ -220,7 +220,13 @@ GROUP BY state_code
 ORDER BY country_login_count;
 ```
 
-## Automatic Tests (In progress)
+## Testing
+
+### Check for proper linting
+
+Install [Perl Critic module](https://github.com/Perl-Critic/Perl-Critic) and then run script `perl lint.pl`.
+
+### Run tests
 
 Create database and user (MySQL)
 
