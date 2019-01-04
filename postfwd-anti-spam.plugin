@@ -11,14 +11,26 @@ use DBI;
 use IO::Handle;
 use Time::Piece;
 
+# Configure default path to configuration files
+# or read them from environment variables
+my $cfg_anti_spam_path = "/etc/postfix/anti-spam.conf";
+my $cfg_sql_statements_path = "/etc/postfix/anti-spam-sql-st.conf";
+
+if ( $ENV{'POSTFWD_ANTISPAM_MAIN_CONFIG_PATH'} ) {
+  $cfg_anti_spam_path = $ENV{'POSTFWD_ANTISPAM_MAIN_CONFIG_PATH'};
+}
+if ( $ENV{'POSTFWD_ANTISPAM_SQL_STATEMENTS_CONFIG_PATH'} ) {
+  $cfg_sql_statements_path = $ENV{'POSTFWD_ANTISPAM_SQL_STATEMENTS_CONFIG_PATH'};
+}
+
 # Main config file
 use Config::Any::INI;
-my $config_ref = Config::Any::INI->load( "/etc/postfix/anti-spam.conf" );
+my $config_ref = Config::Any::INI->load( $cfg_anti_spam_path );
 my %config = %$config_ref;
 
 # SQL statements config file
 use Config::Any::General;
-my $config_sql_ref = Config::Any::General->load( "/etc/postfix/anti-spam-sql-st.conf" );
+my $config_sql_ref = Config::Any::General->load( $cfg_sql_statements_path );
 my %config_sql = %$config_sql_ref;
 
 # Logging
