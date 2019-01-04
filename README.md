@@ -1,6 +1,8 @@
 # Table of Contents
 
 - [Postfwd GeoIP Botnet Block Plugin](#postfwd-geoip-botnet-block-plugin)
+   - [Running with Docker](#running-with-docker)
+   - [Development and Prototyping with Docker](#development-and-prototyping-with-docker)
    - [Installation](#installation)
    - [Dependencies](#dependencies)
       - [RedHat based distributions](#dependencies-on-redhat-based-distributions)
@@ -22,6 +24,25 @@ If you are interested in theory about how botnet spam works and motivation for c
 If you are interested in how your users got their mail accounts hacked, check out [bsdly](https://bsdly.blogspot.com) blog about slow distributed brute force attack on SSH passwords, which also applies to pop3/imap logins [Hail Mary Cloud](http://bsdly.blogspot.com/2013/10/the-hail-mary-cloud-and-lessons-learned.html).
 
 Plugin was tested with _postfwd2 ver. 1.35_ with MySQL and PostgreSQL backend.
+
+## Running with Docker
+
+Prebuilt ready-to-use Docker image is located on DockerHub and can be simply pulled by command:
+
+```bash
+docker pull lirt/postfwd-anti-geoip-spam-plugin:latest
+```
+
+To run postfwd with geoip-plugin, run docker with configuration files mounted as volumes:
+
+```bash
+docker run \
+    -v </absolute/path/to/anti-spam.conf>:/etc/postfwd/anti-spam.conf \
+    -v </absolute/path/to/postfwd.cf>:/etc/postfwd/postfwd.cf \
+    lirt/postfwd-anti-geoip-spam-plugin
+```
+
+This will run `postfwd2` with default arguments, reading postfwd rules file from your mounted volume file `postfwd.cf` and using anti-spam configuration from your file `anti-spam.conf`.
 
 ## Installation
 
