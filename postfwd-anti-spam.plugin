@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 # Geo IP
 use Geo::IP;
@@ -42,7 +42,7 @@ sub mylog {
    if ( $config{debugging}{debug} ) {
       my $date = localtime(time())->strftime('%F %T');
       my $final_str = "$date $log_level: ";
-      
+
       foreach my $s (@errstr) {
          if ( length $s ) {
             $final_str = $final_str . $s;
@@ -51,7 +51,7 @@ sub mylog {
 
       $final_str = $final_str . "\n";
       print $log_file_fh $final_str;
-   }   
+   }
 }
 
 sub mylog_info {
@@ -100,7 +100,7 @@ my $last_cache_flush = time();
       # Clear old records after flush interval expirates
       if ( ($last_cache_flush + $config{app}{db_flush_interval}) < time() ) {
          mylog_info ("Removing records which are older than $config{app}{db_flush_interval}");
-         
+
          my $clear_table_sth = $dbh->prepare($config_sql{delete_old_logins_st})     or do { mylog_err($dbh->errstr); return %result; };
          $clear_table_sth->execute($config{app}{db_flush_interval})                 or do { mylog_err($clear_table_sth->errstr); return %result; };
 
@@ -192,7 +192,7 @@ my $last_cache_flush = time();
       my(%request) = @_;
       my(%result) = ();
       $result{client_uniq_country_login_count} = 0;
-      
+
       # Test if database connection is still alive
       my $rc = $dbh->ping;
       if ( !$rc ) {
@@ -231,7 +231,7 @@ my $last_cache_flush = time();
          }
          return %result;
       }
-      
+
       # Print unique number of countries that user was logged in from
       if ( $result{client_uniq_country_login_count} > $config{debugging}{country_limit} ) {
          mylog_info ("User $user was logged from more than $config{debugging}{country_limit} countries($result{client_uniq_country_login_count})");
