@@ -34,14 +34,14 @@ my $config_sql_ref = Config::Any::General->load( $cfg_sql_statements_path );
 my %config_sql = %$config_sql_ref;
 
 # Logging
-open( my $log_file_fh, '>>', $config{logging}{logfile} ) or die "ERROR: Could not open file '$config{logging}{logfile}' $!\n";
-$log_file_fh->autoflush;
+my $program = "postfwd::anti-spam-plugin";
+my $log_file_fh;
 
 sub mylog {
    my ($log_level, @errstr) = @_;
    if ( $config{debugging}{debug} ) {
       my $date = localtime(time())->strftime('%F %T');
-      my $final_str = "$date $log_level: ";
+      my $final_str = "$date $program $log_level: ";
 
       foreach my $s (@errstr) {
          if ( length $s ) {
@@ -64,6 +64,16 @@ sub mylog_fatal {
    mylog("FATAL[$$]", @_);
    exit -1;
 }
+
+if ( !$config{logging}{logfile} || !length $config{logging}{logfile} || $config{logging}{logfile} eq "\"\"" || $config{logging}{logfile} eq "\'\'" ) {
+   $log_file_fh = *STDOUT;
+   mylog_info ("Logging destination is STDOUT")
+} else {
+   open( $log_file_fh, '>>', $config{logging}{logfile} ) or die "ERROR: Could not open file '$config{logging}{logfile}' $!\n";
+   $log_file_fh->autoflush;
+   mylog_info ("Logging destination is file '$config{logging}{logfile}'")
+}
+
 
 # DB connection
 # Update values to your DB connection in config file /etc/postfix/anti-spam.conf
