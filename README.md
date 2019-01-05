@@ -44,6 +44,15 @@ docker run \
 
 This will run `postfwd2` with default arguments, reading postfwd rules file from your mounted volume file `postfwd.cf` and using anti-spam configuration from your file `anti-spam.conf`.
 
+## Development and Prototyping with Docker
+
+Complete development environment with postfwd, anti-spam plugin and mysql database correctly configured together can be run with command `docker-compose -f dev-compose.yml up` from directory `./tests/`.
+
+Note for overriding postfwd arguments:
+
+* Most important arguments to run `postfwd` in Docker are `--stdout` and `--nodaemon`. These arguments configure postfwd to log into standard output and stay in foreground.
+* For running postfwd plugin, you also need to set argument `--plugins <path-to-plugin>` to correct location of plugin.
+
 ## Installation
 
 To install this plugin follow next steps:

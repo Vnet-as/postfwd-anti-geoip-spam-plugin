@@ -1,4 +1,4 @@
-FROM postfwd/postfwd:latest
+FROM postfwd/postfwd:v1.37
 
 LABEL maintainer="Postfwd GeoIp Spam Plugin Maintainer <ondrej.vaskoo@gmail.com>"
 
