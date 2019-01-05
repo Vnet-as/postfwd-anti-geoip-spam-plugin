@@ -80,6 +80,8 @@ apt-get install -y libgeo-ip-perl \
 
 ## Configuration
 
+Plugin configuration file `anti-spam.conf` is INI style configuration file, in which values must NOT be quoted!
+
 ### Postfwd configuration
 
 Add following rules to postfwd configuration file `postfwd.cf`. You can use your own message and value of parameter `client_uniq_country_login_count`, which sets maximum number of unique countries to allow user to log in via sasl.
@@ -143,10 +145,15 @@ db_flush_interval = 86400
 
 ## Logging
 
-By default logging for debugging purposes is enabled. Log file is by default located in `/tmp/postfwd_plugin.log` but can be changed as in example below. You can disable logging by updating configuration file.
+Plugin is by default logging into standard output. This can be changed in configuration file by setting value for statement `logfile` in `[logging]` section.
+
+You can disable logging completely by updating value of statement `debug` to `0` in section `[debugging]`.
+
+Example configuration of file `anti-spam.conf`:
 
 ```INI
 [logging]
+# Remove statement `logfile`, or set it to empty `logfile = ` to log into STDOUT
 logfile = /var/log/postfwd_plugin.log
 
 [debugging]
