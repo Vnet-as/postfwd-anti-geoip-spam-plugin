@@ -77,17 +77,29 @@ if ( !$config{logging}{logfile} || !length $config{logging}{logfile} || $config{
 
 # DB connection
 # Update values to your DB connection in config file /etc/postfix/anti-spam.conf
+my $dbh;
 my $dsn = "DBI:$config{database}{driver}:database=$config{database}{database};host=$config{database}{host};port=$config{database}{port}";
 my %attr = ( RaiseError => 0, PrintError => 1, AutoCommit => 1 );
 mylog_info ("Starting postfwd plugin with dsn '$dsn'");
 
-# Connect to DB
-my $dbh = DBI->connect($dsn, $config{database}{userid}, $config{database}{password}, \%attr) or mylog_fatal ($DBI::errstr);
+# Connect to DB, do 3 retries with 10 second timeout
+for ( my $i = 0; $i < 3; $i++ ) {
+   $dbh = DBI->connect($dsn, $config{database}{userid}, $config{database}{password}, \%attr) and last;
+   mylog_err ("Retry ", $i + 1, "/3", " - ", $DBI::errstr);
+   sleep 10;
+}
+if ( !defined $dbh ) {
+   mylog_fatal "Could not connect to configured database after 3 retries";
+} else {
+   mylog_info ("Database connection successful");
+}
 
-# Create table "postfwd_logins" if it does not exists
-mylog_info ("Creating table postfwd_logins if it does not exists");
+
+# Create table "postfwd_logins" if it does not exist
+mylog_info ("Creating table postfwd_logins if it does not exist");
 my $create_table_sth = $dbh->prepare($config_sql{create_table_st})   or mylog_fatal ($dbh->errstr);
 $create_table_sth->execute()                                         or mylog_fatal ($create_table_sth->errstr);
+mylog_info ("Table was created successfully and plugin is correctly initialized.");
 
 # Setup initial time for flushing database records older than interval set in config file
 my $last_cache_flush = time();
