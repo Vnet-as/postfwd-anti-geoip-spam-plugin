@@ -1,0 +1,27 @@
+version: "3.3"
+services:
+  mysql-postfwd-db:
+    image: mariadb:latest
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=no
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_USER=testuser
+      - MYSQL_PASSWORD=testpasswordpostfwdantispam
+      - MYSQL_DATABASE=postfwd-antispam-test
+    volumes:
+      - type: volume
+        source: ./dev-create-antispam-db.sql
+        target: /docker-entrypoint-initdb.d/dev-create-antispam-db.sql
+  postfwd-geoip-antispam:
+    build: ../
+    ports:
+      - "10040:10040"
+    volumes:
+      - type: volume
+        source: ./dev-anti-spam.conf
+        target: /etc/postfwd/anti-spam.conf
+      - type: volume
+        source: ./dev-postfwd.cf
+        target: /etc/postfwd/postfwd.cf
