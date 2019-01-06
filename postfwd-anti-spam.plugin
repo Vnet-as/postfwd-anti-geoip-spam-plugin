@@ -43,7 +43,7 @@ my $log_file_fh;
 sub mylog {
    my ($log_level, @errstr) = @_;
    if ( $config{debugging}{debug} ) {
-      my $date = localtime(time())->strftime('%F %T');
+      my $date = localtime(time)->strftime('%F %T');
       my $final_str = "$date $program $log_level: ";
 
       foreach my $s (@errstr) {
@@ -75,7 +75,7 @@ if ( !$config{logging}{logfile} || !length $config{logging}{logfile} || $config{
    $log_file_fh = *STDOUT;
    mylog_info ('Logging destination is STDOUT')
 } else {
-   open( $log_file_fh, '>>', $config{logging}{logfile} ) or die "ERROR: Could not open file '$config{logging}{logfile}' $ERRNO\n";
+   open $log_file_fh, '>>', $config{logging}{logfile} or die "ERROR: Could not open file '$config{logging}{logfile}' $ERRNO\n";
    $log_file_fh->autoflush;
    mylog_info ("Logging destination is file '$config{logging}{logfile}'")
 }
@@ -108,7 +108,7 @@ $create_table_sth->execute()                                         or mylog_fa
 mylog_info ('Table was created successfully and plugin is correctly initialized.');
 
 # Setup initial time for flushing database records older than interval set in config file
-my $last_cache_flush = time();
+my $last_cache_flush = time;
 
 %postfwd_items_plugin = (
 
@@ -126,14 +126,14 @@ my $last_cache_flush = time();
       }
 
       # Clear old records after flush interval expirates
-      if ( ($last_cache_flush + $config{app}{db_flush_interval}) < time() ) {
+      if ( ($last_cache_flush + $config{app}{db_flush_interval}) < time ) {
          mylog_info ("Removing records which are older than $config{app}{db_flush_interval}");
 
          my $clear_table_sth = $dbh->prepare($config_sql{delete_old_logins_st})     or do { mylog_err($dbh->errstr); return %result; };
          $clear_table_sth->execute($config{app}{db_flush_interval})                 or do { mylog_err($clear_table_sth->errstr); return %result; };
 
          mylog_info ("DB in pid $PID cleared!");
-         $last_cache_flush = time();
+         $last_cache_flush = time;
       }
 
       # Get sasl_username from request
@@ -183,13 +183,13 @@ my $last_cache_flush = time();
          # Save new user mail into hash if it does not exists
          mylog_info ("Inserting $user, $client_ip, $cc");
          my $insert_sth = $dbh->prepare($config_sql{insert_st})                                    or do { mylog_err($dbh->errstr); return %result; };
-         $insert_sth->execute($user, $client_ip, $cc, localtime(time())->strftime('%F %T'))        or do { mylog_err($insert_sth->errstr); return %result; };
+         $insert_sth->execute($user, $client_ip, $cc, localtime(time)->strftime('%F %T'))        or do { mylog_err($insert_sth->errstr); return %result; };
       }
       else {
          # Increment or initialize login count for user and given IP/country
          mylog_info ("Incrementing $user, $client_ip, $cc");
          my $increment_sth = $dbh->prepare($config_sql{increment_st})                              or do { mylog_err($dbh->errstr); return %result; };
-         $increment_sth->execute(localtime(time())->strftime('%F %T'), $user, $client_ip, $cc)     or do { mylog_err ($increment_sth->errstr); return %result; };
+         $increment_sth->execute(localtime(time)->strftime('%F %T'), $user, $client_ip, $cc)     or do { mylog_err ($increment_sth->errstr); return %result; };
       }
 
       # Get number of logins from given IP
