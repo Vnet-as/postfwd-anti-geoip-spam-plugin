@@ -53,7 +53,7 @@ sub mylog {
       }
 
       $final_str = $final_str . "\n";
-      print $log_file_fh $final_str;
+      my $tmp = print { $log_file_fh } $final_str;
    }
    return
 }
