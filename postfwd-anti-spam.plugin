@@ -1,5 +1,8 @@
 #!/usr/bin/env perl
 
+# Declare version
+our $VERSION = 1.2;
+
 # English module for Perl::Critic compliance
 use English qw( -no_match_vars );
 
