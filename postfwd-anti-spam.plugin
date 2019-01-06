@@ -59,15 +59,18 @@ sub mylog {
 }
 
 sub mylog_info {
-   mylog("INFO[$PID]", @_);
+   my @args = @_;
+   mylog("INFO[$PID]", @args);
    return
 }
 sub mylog_err {
-   mylog("ERROR[$PID]", @_);
+   my @args = @_;
+   mylog("ERROR[$PID]", @args);
    return
 }
 sub mylog_fatal {
-   mylog("FATAL[$PID]", @_);
+   my @args = @_;
+   mylog("FATAL[$PID]", @args);
    exit -1;
 }
 
