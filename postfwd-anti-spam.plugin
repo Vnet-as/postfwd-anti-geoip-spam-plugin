@@ -98,9 +98,9 @@ mylog_info ("Starting postfwd plugin with dsn '$dsn'");
 <<<<<<< Updated upstream
 use const $DB_CONN_RETRIES = 3;
 use const $DB_CONN_TIMEOUT = 10;
-for ( my $i = 0; $i < $DB_CONN_RETRIES; $i++ ) {
+for ( 1..$DB_CONN_RETRIES ) {
    $dbh = DBI->connect($dsn, $config{database}{userid}, $config{database}{password}, \%attr) and last;
-   mylog_err ('Retry ', $i + 1, '/3', ' - ', DBI->errstr);
+   mylog_err ('Retry ', $_, '/3', ' - ', DBI->errstr);
    sleep $DB_CONN_TIMEOUT;
 =======
 use constant DB_CONN_RETRIES => 3;
