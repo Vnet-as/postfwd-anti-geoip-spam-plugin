@@ -166,7 +166,7 @@ my $last_cache_flush = time;
          return %result;
       }
       # Simple regex test if string looks like IP address
-      if ( !($client_ip =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/) ) {
+      if ( !( $client_ip =~ m/^\d{1,3}[.]\d{1,3}[.]\d{1,3}[.]\d{1,3}$/msx ) ) {
          mylog_info ("'$client_ip' is not valid IP address");
          return %result;
       }
