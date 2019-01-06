@@ -55,13 +55,16 @@ sub mylog {
       $final_str = $final_str . "\n";
       print $log_file_fh $final_str;
    }
+   return
 }
 
 sub mylog_info {
    mylog("INFO[$PID]", @_);
+   return
 }
 sub mylog_err {
    mylog("ERROR[$PID]", @_);
+   return
 }
 sub mylog_fatal {
    mylog("FATAL[$PID]", @_);
