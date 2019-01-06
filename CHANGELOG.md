@@ -2,6 +2,33 @@
 
 This changelog notes changes between versions of Postfwd GeoIP Anti-Spam plugin.
 
+## Version 1.2 [11. Mar 2019]
+
+This stable release has changes mainly in linting, readability and testability, but also
+contains several bugfixes.
+
+Docker base image was updated from 1.37 to 1.39.
+
+### Added
+
+- Perl::Critic RC file `.perlcriticrc` for static code and linting purposes.
+- Install `geoip-database` into Docker image and added note in README.
+- Option to enable autoflush to STDOUT and log.
+- 10 second timeout and 3 retries to connect to database.
+- Testing script `tests/dev-request.sh` and instructions in README.
+
+### Changed
+
+- Updated postwfd Docker version to 1.39.
+- Perl Linting according to Perl Critic (https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/pull/26)
+- Fixed Docker Compose volumes from type `volume` to `bind`.
+- Fix for double calling `postfwd2` in Dockerfile.
+
+### Removed
+
+- Script `lint.pl` was removed and replaced by more general/portable file
+`.perlcriticrc`.
+
 ## Version 1.1 [5. Jan 2019]
 
 This stable version introduces docker image based on official postfwd docker image
