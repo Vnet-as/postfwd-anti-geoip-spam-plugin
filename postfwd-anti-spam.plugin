@@ -174,12 +174,12 @@ my $last_cache_flush = time;
       }
 
       # Check how many rows was returned (0 or more)
-      my $rowCount = $check_row_existence_sth->fetchrow_array;
+      my $row_count = $check_row_existence_sth->fetchrow_array;
       if ( $check_row_existence_sth->err ) {
          mylog_err ($check_row_existence_sth->errstr);
          return %result;
       }
-      if ( $rowCount == 0 ) {
+      if ( $row_count == 0 ) {
          # Save new user mail into hash if it does not exists
          mylog_info ("Inserting $user, $client_ip, $cc");
          my $insert_sth = $dbh->prepare($config_sql{insert_st})                                    or do { mylog_err($dbh->errstr); return %result; };
@@ -236,8 +236,8 @@ my $last_cache_flush = time;
 
       # Check if user with given IP already has record
       my $check_user_existence_sth = $dbh->prepare($config_sql{check_user_existence_st})   or do { mylog_err($dbh->errstr); return %result; };
-      my $rowCount = $check_user_existence_sth->execute($user);
-      if ( $rowCount == 0 ) {
+      my $row_count = $check_user_existence_sth->execute($user);
+      if ( $row_count == 0 ) {
          if ( $check_user_existence_sth->err ) {
             mylog_err ($check_user_existence_sth->errstr);
          }
@@ -294,8 +294,8 @@ my $last_cache_flush = time;
 
       # Check if user with given IP already has record
       my $check_user_existence_sth = $dbh->prepare($config_sql{check_user_existence_st})   or do { mylog_err($dbh->errstr); return %result; };
-      my $rowCount = $check_user_existence_sth->execute($user);
-      if ( $rowCount == 0 ) {
+      my $row_count = $check_user_existence_sth->execute($user);
+      if ( $row_count == 0 ) {
          if ( $check_user_existence_sth->err ) {
             mylog_err ($check_user_existence_sth->errstr);
          }
