@@ -29,12 +29,12 @@ if ( $ENV{'POSTFWD_ANTISPAM_SQL_STATEMENTS_CONFIG_PATH'} ) {
 # Main config file
 use Config::Any::INI;
 my $config_ref = Config::Any::INI->load( $cfg_anti_spam_path );
-my %config = %$config_ref;
+my %config = %{ $config_ref };
 
 # SQL statements config file
 use Config::Any::General;
 my $config_sql_ref = Config::Any::General->load( $cfg_sql_statements_path );
-my %config_sql = %$config_sql_ref;
+my %config_sql = %{ $config_sql_ref };
 
 # Logging
 my $program = 'postfwd::anti-spam-plugin';
