@@ -71,7 +71,7 @@ sub mylog_err {
 sub mylog_fatal {
    my @args = @_;
    mylog("FATAL[$PID]", @args);
-   exit -1;
+   exit 1;
 }
 
 if ( !$config{logging}{logfile} || !length $config{logging}{logfile} || $config{logging}{logfile} eq '\'\'' || $config{logging}{logfile} eq '\'\'' ) {
