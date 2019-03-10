@@ -1,3 +1,4 @@
+---
 version: "3.3"
 services:
   mysql-postfwd-db:
@@ -11,7 +12,7 @@ services:
       - MYSQL_PASSWORD=testpasswordpostfwdantispam
       - MYSQL_DATABASE=postfwd-antispam-test
     volumes:
-      - type: volume
+      - type: bind
         source: ./dev-create-antispam-db.sql
         target: /docker-entrypoint-initdb.d/dev-create-antispam-db.sql
   postfwd-geoip-antispam:
@@ -19,9 +20,9 @@ services:
     ports:
       - "10040:10040"
     volumes:
-      - type: volume
+      - type: bind
         source: ./dev-anti-spam.conf
         target: /etc/postfwd/anti-spam.conf
-      - type: volume
+      - type: bind
         source: ./dev-postfwd.cf
         target: /etc/postfwd/postfwd.cf
