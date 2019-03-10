@@ -45,7 +45,6 @@ ENTRYPOINT ["docker-entrypoint.sh", \
             "--stdout", "--nodaemon"]
 
 EXPOSE 10040
-CMD ["postfwd2", \
-     "--cache=60", \
+CMD ["--cache=60", \
      "--noidlestats", \
      "--summary=600"]
