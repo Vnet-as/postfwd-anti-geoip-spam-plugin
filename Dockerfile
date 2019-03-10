@@ -18,6 +18,7 @@ RUN apt-get update \
         libdbd-pg-perl \
         libgeo-ip-perl \
         libtime-piece-perl \
+        geoip-database \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy binaries into PATH
