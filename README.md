@@ -269,6 +269,8 @@ ORDER BY country_login_count;
 
 ## Development and testing
 
-### Check for proper linting
+Check for proper linting with `perlcritic postfwd-anti-spam.plugin`.
 
-Install [Perl Critic module](https://github.com/Perl-Critic/Perl-Critic) and then run script `perl lint.pl`.
+Change into directory `./test` and execute `docker-compose -f dev-compose.yml up` to get postfwd and mysql database up.
+
+Send SMTP requests to postfwd policy server using command `nc 127.0.0.1 10040 < <(./dev-request.sh <IP_ADDRESS>)` (replace `<IP_ADDRESS>` with client IP address).
