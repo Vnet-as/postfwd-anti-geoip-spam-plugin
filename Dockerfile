@@ -18,7 +18,24 @@ RUN apt-get update \
         libdbd-pg-perl \
         libgeo-ip-perl \
         libtime-piece-perl \
+        ca-certificates \
+        wget \
     && rm -rf /var/lib/apt/lists/*
+
+# Install MaxMind GeoIP database
+RUN mkdir -p /usr/share/GeoIP \
+    && mkdir -p /usr/local/share/GeoIP \
+    && wget -qO /tmp/GeoLite2-Country.tar.gz https://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.tar.gz \
+    && tar -xzf /tmp/GeoLite2-Country.tar.gz -C /tmp/ \
+    && mv /tmp/GeoLite2-Country_*/GeoLite2-Country.mmdb /usr/share/GeoIP/GeoIP.dat \
+    && rm /tmp/GeoLite2-Country.tar.gz \
+    && rm -rf /tmp/GeoLite2-Country_* \
+    && ln -sf /usr/share/GeoIP/GeoIP.dat /usr/local/share/GeoIP/GeoIP.dat
+
+# Cleanup packages
+RUN apt-get purge -y --auto-remove \
+        wget \
+        ca-certificates
 
 # Copy binaries into PATH
 RUN cp /opt/postfwd/sbin/postfwd1 /opt/postfwd/sbin/postfwd2 /usr/sbin/
