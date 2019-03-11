@@ -66,6 +66,9 @@ sub mylog_fatal {
 }
 
 if ( !$config{logging}{logfile} || !length $config{logging}{logfile} || $config{logging}{logfile} eq "\"\"" || $config{logging}{logfile} eq "\'\'" ) {
+    if ( $config{logging}{autoflush} ) {
+        STDOUT->autoflush(1);
+    }
    $log_file_fh = *STDOUT;
    mylog_info ("Logging destination is STDOUT")
 } else {
