@@ -74,6 +74,9 @@ if ( !$config{logging}{logfile} || !length $config{logging}{logfile} || $config{
    mylog_info ("Logging destination is file '$config{logging}{logfile}'")
 }
 
+# Print info about GeoIP database
+mylog_info("GeoIP Database Informations: ", $gi->database_info);
+mylog_info("GeoIP Database Edition: ", $gi->database_edition);
 
 # DB connection
 # Update values to your DB connection in config file /etc/postfix/anti-spam.conf
