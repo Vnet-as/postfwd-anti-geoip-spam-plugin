@@ -19,7 +19,7 @@
 
 This is a plugin to postfix firewall [postfwd](http://postfwd.org/) (also located on [github](https://github.com/postfwd/postfwd)) intended to block international spam botnets. International spam botnets are logging into hacked mail addresses via sasl login from multiple IP addresses based in usually more than 30 unique countries. After successful login, the hackers send spam from huge amount of unique IP addresses which circumvents traditional rate limits per IP address.
 
-If you are interested in theory about how botnet spam works and motivation for creating this plugin, look at the blog and tutorial on [HowToForge](https://www.howtoforge.com/tutorial/blocking-of-international-spam-botnets-postfix-plugin/).
+If you are interested in theory about how botnet spam works and motivation for creating this plugin, look at the blog on [Medium](https://medium.com/@ondrej.vaskoo/blocking-of-international-spam-botnets-a8a98e1ab589).
 
 If you are interested in how your users got their mail accounts hacked, check out [bsdly](https://bsdly.blogspot.com) blog about slow distributed brute force attack on SSH passwords, which also applies to pop3/imap logins [Hail Mary Cloud](http://bsdly.blogspot.com/2013/10/the-hail-mary-cloud-and-lessons-learned.html).
 
