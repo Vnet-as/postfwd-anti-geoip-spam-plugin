@@ -23,7 +23,7 @@ If you are interested in theory about how botnet spam works and motivation for c
 
 If you are interested in how your users got their mail accounts hacked, check out [bsdly](https://bsdly.blogspot.com) blog about slow distributed brute force attack on SSH passwords, which also applies to pop3/imap logins [Hail Mary Cloud](http://bsdly.blogspot.com/2013/10/the-hail-mary-cloud-and-lessons-learned.html).
 
-Plugin was tested with _postfwd2 ver. 1.35_ with MySQL and PostgreSQL backend.
+Plugin was tested with _postfwd2 ver. 1.39_ with MySQL and PostgreSQL backend.
 
 ## Running with Docker
 
@@ -78,9 +78,10 @@ CREATE INDEX postfwd_sasl_username ON postfwd_logins (sasl_username);
 
 ### Dependencies
 
-- Postfwd2
-- Database (MySQL or PostgreSQL)
-- Perl modules - Geo::IP, DBI, Time::Piece, Config::Any, DBD::mysql or DBD::Pg
+- `Postfwd2`
+- Database (`MySQL` or `PostgreSQL`)
+- Perl modules - `Geo::IP`, `DBI`, `Time::Piece`, `Config::Any`, `DBD::mysql` or `DBD::Pg`
+- GeoIP database
 
 #### Dependencies on RedHat based distributions
 
@@ -105,7 +106,8 @@ apt-get install -y libgeo-ip-perl \
                    libconfig-any-perl \
                    libdbi-perl \
                    libdbd-mysql-perl \
-                   libdbd-pg-perl
+                   libdbd-pg-perl \
+                   geoip-database
 ```
 
 ## Configuration
@@ -190,6 +192,7 @@ Example configuration of file `anti-spam.conf`:
 [logging]
 # Remove statement `logfile`, or set it to empty `logfile = ` to log into STDOUT
 logfile = /var/log/postfwd_plugin.log
+autoflush = 0
 
 [debugging]
 # Enable(1) or disable(0) logging
