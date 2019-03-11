@@ -1,4 +1,4 @@
-FROM postfwd/postfwd:v1.37
+FROM postfwd/postfwd:v1.39
 
 LABEL maintainer="Postfwd GeoIp Spam Plugin Maintainer <ondrej.vaskoo@gmail.com>"
 
@@ -18,6 +18,7 @@ RUN apt-get update \
         libdbd-pg-perl \
         libgeo-ip-perl \
         libtime-piece-perl \
+        geoip-database \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy binaries into PATH
@@ -45,7 +46,6 @@ ENTRYPOINT ["docker-entrypoint.sh", \
             "--stdout", "--nodaemon"]
 
 EXPOSE 10040
-CMD ["postfwd2", \
-     "--cache=60", \
+CMD ["--cache=60", \
      "--noidlestats", \
      "--summary=600"]
