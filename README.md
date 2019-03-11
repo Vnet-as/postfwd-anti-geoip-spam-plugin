@@ -144,6 +144,11 @@ id=BAN_BOTNET ; \
    &&LOOPBACK_RANGE ; \
    client_uniq_country_login_count > 5 ; \
    action=rate(sasl_username/1/3600/554 Your mail account ($$sasl_username) was compromised. Please change your password immediately after next login.);
+
+id=BAN_BOTNET_IP ; \
+   sasl_username=~^(.+)$ ; \
+   client_uniq_ip_login_count > 20 ; \
+   action=rate(sasl_username/1/3600/554 Your mail account ($$sasl_username): Too many messages from different hosts.);
 ```
 
 ### Database backend configuration
