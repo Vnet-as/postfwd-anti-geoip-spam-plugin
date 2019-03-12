@@ -16,7 +16,9 @@ services:
         source: ./dev-create-antispam-db.sql
         target: /docker-entrypoint-initdb.d/dev-create-antispam-db.sql
   postfwd-geoip-antispam:
-    build: ../
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
     ports:
       - "10040:10040"
     volumes:
