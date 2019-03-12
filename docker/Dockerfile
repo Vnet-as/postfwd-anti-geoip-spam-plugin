@@ -25,7 +25,7 @@ RUN apt-get update \
 RUN cp /opt/postfwd/sbin/postfwd1 /opt/postfwd/sbin/postfwd2 /usr/sbin/
 
 # Copy entrypoint script
-COPY docker-entrypoint.sh /usr/local/bin/
+COPY docker/docker-entrypoint.sh /usr/local/bin/
 RUN chmod 750 /usr/local/bin/docker-entrypoint.sh
 
 # Install plugin
