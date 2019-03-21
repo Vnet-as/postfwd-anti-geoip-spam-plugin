@@ -2,7 +2,6 @@ FROM postfwd/postfwd:v2.00
 
 LABEL maintainer="Postfwd GeoIp Spam Plugin Maintainer <ondrej.vaskoo@gmail.com>"
 
-ENV PATH="/opt/postfwd/sbin/:${PATH}"
 ENV POSTFWD_ANTISPAM_MAIN_CONFIG_PATH=/etc/postfwd/anti-spam.conf
 ENV POSTFWD_ANTISPAM_SQL_STATEMENTS_CONFIG_PATH=/etc/postfwd/anti-spam-sql-st.conf
 
@@ -21,9 +20,6 @@ RUN apt-get update \
         geoip-database \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy binaries into PATH
-RUN cp /opt/postfwd/sbin/postfwd1 /opt/postfwd/sbin/postfwd2 /usr/sbin/
-
 # Copy entrypoint script
 COPY docker/docker-entrypoint.sh /usr/local/bin/
 RUN chmod 750 /usr/local/bin/docker-entrypoint.sh
@@ -35,6 +31,7 @@ RUN chmod 644 \
         /etc/postfwd/postfwd-anti-spam.plugin \
         /etc/postfwd/anti-spam-sql-st.conf
 
+EXPOSE 10040
 ENTRYPOINT ["docker-entrypoint.sh", \
             "--file", "/etc/postfwd/postfwd.cf", \
             "--user", "postfw", "--group", "postfw", \
@@ -45,7 +42,6 @@ ENTRYPOINT ["docker-entrypoint.sh", \
             "--save_rates=/var/lib/postfwd/postfwd.rates", \
             "--stdout", "--nodaemon"]
 
-EXPOSE 10040
 CMD ["--cache=60", \
      "--noidlestats", \
      "--summary=600"]
