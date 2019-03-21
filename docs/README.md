@@ -23,14 +23,23 @@ If you are interested in theory about how botnet spam works and motivation for c
 
 If you are interested in how your users got their mail accounts hacked, check out [bsdly](https://bsdly.blogspot.com) blog about slow distributed brute force attack on SSH passwords, which also applies to pop3/imap logins [Hail Mary Cloud](http://bsdly.blogspot.com/2013/10/the-hail-mary-cloud-and-lessons-learned.html).
 
-Plugin was tested with _postfwd2 ver. 1.39_ with MySQL and PostgreSQL backend.
+## Plugin Compatility Matrix
+
+- Release `v1.21` works with `postfwd1` and `postfwd2` versions `1.XX` (eg. `1.39`) and higher minor versions.
+- Releases `v1.30` and higher are compatible only with `postfwd3` versions `2.XX`.
+- `master` branch is compatible only with `postfwd3` versions `2.XX`.
+- Supported database backends are **MySQL** and **PostgreSQL**.
 
 ## Running with Docker
 
 Prebuilt ready-to-use Docker image is located on DockerHub and can be simply pulled by command:
 
 ```bash
+# Postfwd3 tags
 docker pull lirt/postfwd-anti-geoip-spam-plugin:latest
+docker pull lirt/postfwd-anti-geoip-spam-plugin:v1.30
+# Postfwd1, Postfwd2 tags
+docker pull lirt/postfwd-anti-geoip-spam-plugin:v1.21
 ```
 
 To run postfwd with geoip-plugin, run docker with configuration files mounted as volumes:
@@ -39,10 +48,10 @@ To run postfwd with geoip-plugin, run docker with configuration files mounted as
 docker run \
     -v </absolute/path/to/anti-spam.conf>:/etc/postfwd/anti-spam.conf \
     -v </absolute/path/to/postfwd.cf>:/etc/postfwd/postfwd.cf \
-    lirt/postfwd-anti-geoip-spam-plugin
+    lirt/postfwd-anti-geoip-spam-plugin:latest
 ```
 
-This will run `postfwd2` with default arguments, reading postfwd rules file from your mounted volume file `postfwd.cf` and using anti-spam configuration from your file `anti-spam.conf`.
+This will run `postfwd2` or `postfwd3` with default arguments, reading postfwd rules file from your mounted volume file `postfwd.cf` and using anti-spam configuration from your file `anti-spam.conf`.
 
 ## Development and Prototyping with Docker
 
@@ -78,7 +87,7 @@ CREATE INDEX postfwd_sasl_username ON postfwd_logins (sasl_username);
 
 ### Dependencies
 
-- `Postfwd2`
+- `Postfwd2` or `Postfwd3`
 - Database (`MySQL` or `PostgreSQL`)
 - Perl modules - `Geo::IP`, `DBI`, `Time::Piece`, `Config::Any`, `DBD::mysql` or `DBD::Pg`
 - GeoIP database
