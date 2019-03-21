@@ -1,7 +1,8 @@
 # Supported tags and respective `Dockerfile` links
 
 * [`latest` (Dockerfile)](https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/blob/master/docker/Dockerfile)
-* [`v1.2` (Dockerfile)](https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/blob/v1.2/Dockerfile)
+* [`v1.30` (Dockerfile)](https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/blob/v1.30/docker/Dockerfile)
+* [`v1.21` (Dockerfile)](https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/blob/v1.21/docker/Dockerfile)
 
 # Postfwd GeoIP Anti-Spam Plugin
 
