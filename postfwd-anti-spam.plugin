@@ -144,9 +144,9 @@ my $last_cache_flush = time;
 
     'incr_client_country_login_count' => sub {
 
-        my (%request) = @_;
-        my (%result)  = ();
-        $result{incr_client_country_login_count} = 0;
+        my ($request) = shift;
+        my ($result) = undef;
+        $result->{incr_client_country_login_count} = 0;
 
         # Test if database connection is still alive
         my $rc = $dbh->ping;
@@ -169,86 +169,86 @@ my $last_cache_flush = time;
 
             my $clear_table_sth =
               $dbh->prepare( $config_sql{delete_old_logins_st} )
-              or do { mylog_err( $dbh->errstr ); return %result; };
+              or do { mylog_err( $dbh->errstr ); return $result; };
             $clear_table_sth->execute( $config{app}{db_flush_interval} )
-              or do { mylog_err( $clear_table_sth->errstr ); return %result; };
+              or do { mylog_err( $clear_table_sth->errstr ); return $result; };
 
             mylog_info("DB in pid $PID cleared!");
             $last_cache_flush = time;
         }
 
         # Get sasl_username from request
-        my $user = $request{sasl_username};
+        my $user = $request->{sasl_username};
         if ( !length $user || !($user) ) {
-            return %result;
+            return $result;
         }
 
         # Get client address
-        my $client_ip = $request{client_address};
+        my $client_ip = $request->{client_address};
         if ( !length $client_ip || !($client_ip) ) {
-            return %result;
+            return $result;
         }
 
         # Simple regex test if string looks like IP address
         if ( !( $client_ip =~ m/^\d{1,3}[.]\d{1,3}[.]\d{1,3}[.]\d{1,3}$/msx ) )
         {
             mylog_info("'$client_ip' is not valid IP address");
-            return %result;
+            return $result;
         }
 
         # Get country code from GeoIP module
         my $cc = $gi->country_code_by_addr($client_ip);
         if ( !defined $cc ) {
             mylog_info("Cannot find country code for IP address [$client_ip]");
-            return %result;
+            return $result;
         }
         else {
             if ( !length $cc || !($cc) ) {
                 mylog_info("Country code for IP address [$client_ip] is empty");
-                return %result;
+                return $result;
             }
         }
 
         # Check if user with given IP already has record
         my $check_row_existence_sth =
           $dbh->prepare( $config_sql{check_row_existence_st} )
-          or do { mylog_err( $dbh->errstr ); return %result; };
+          or do { mylog_err( $dbh->errstr ); return $result; };
         if ( !( $check_row_existence_sth->execute( $user, $client_ip, $cc ) ) )
         {
             mylog_err( $check_row_existence_sth->errstr );
-            return %result;
+            return $result;
         }
 
         # Check how many rows was returned (0 or more)
         my $row_count = $check_row_existence_sth->fetchrow_array;
         if ( $check_row_existence_sth->err ) {
             mylog_err( $check_row_existence_sth->errstr );
-            return %result;
+            return $result;
         }
         if ( $row_count == 0 ) {
 
             # Save new user mail into hash if it does not exists
             mylog_info("Inserting $user, $client_ip, $cc");
             my $insert_sth = $dbh->prepare( $config_sql{insert_st} )
-              or do { mylog_err( $dbh->errstr ); return %result; };
+              or do { mylog_err( $dbh->errstr ); return $result; };
             $insert_sth->execute( $user, $client_ip, $cc,
                 localtime(time)->strftime('%F %T') )
-              or do { mylog_err( $insert_sth->errstr ); return %result; };
+              or do { mylog_err( $insert_sth->errstr ); return $result; };
         }
         else {
             # Increment or initialize login count for user and given IP/country
             mylog_info("Incrementing $user, $client_ip, $cc");
             my $increment_sth = $dbh->prepare( $config_sql{increment_st} )
-              or do { mylog_err( $dbh->errstr ); return %result; };
+              or do { mylog_err( $dbh->errstr ); return $result; };
             $increment_sth->execute( localtime(time)->strftime('%F %T'),
                 $user, $client_ip, $cc )
-              or do { mylog_err( $increment_sth->errstr ); return %result; };
+              or do { mylog_err( $increment_sth->errstr ); return $result; };
         }
 
         # Get number of logins from given IP
         my $login_count_from_country_sth =
           $dbh->prepare( $config_sql{login_count_from_country_st} )
-          or do { mylog_err( $dbh->errstr ); return %result; };
+          or do { mylog_err( $dbh->errstr ); return $result; };
         if (
             !(
                 $login_count_from_country_sth->execute(
@@ -258,33 +258,33 @@ my $last_cache_flush = time;
           )
         {
             mylog_err( $login_count_from_country_sth->errstr );
-            return %result;
+            return $result;
         }
 
         # Fetch number of logins from sth
-        $result{incr_client_country_login_count} =
+        $result->{incr_client_country_login_count} =
           $login_count_from_country_sth->fetchrow_array;
-        if ( !$result{incr_client_country_login_count} ) {
+        if ( !$result->{incr_client_country_login_count} ) {
             if ( $login_count_from_country_sth->err ) {
                 mylog_err( $login_count_from_country_sth->errstr );
             }
-            return %result;
+            return $result;
         }
 
         mylog_info(
-"Number of logins from IP $client_ip is $result{incr_client_country_login_count}"
+"Number of logins from IP $client_ip is $result->{incr_client_country_login_count}"
         );
 
         # Return number of logins from country last logged from
-        return %result;
+        return $result;
 
     },
 
     'client_uniq_country_login_count' => sub {
 
-        my (%request) = @_;
-        my (%result)  = ();
-        $result{client_uniq_country_login_count} = 0;
+        my ($request) = shift;
+        my ($result) = undef;
+        $result->{client_uniq_country_login_count} = 0;
 
         # Test if database connection is still alive
         my $rc = $dbh->ping;
@@ -300,66 +300,66 @@ my $last_cache_flush = time;
         }
 
         # Get sasl_username
-        my $user = $request{sasl_username};
+        my $user = $request->{sasl_username};
         if ( !length $user || !($user) ) {
-            return %result;
+            return $result;
         }
 
         # Check if user with given IP already has record
         my $check_user_existence_sth =
           $dbh->prepare( $config_sql{check_user_existence_st} )
-          or do { mylog_err( $dbh->errstr ); return %result; };
+          or do { mylog_err( $dbh->errstr ); return $result; };
         my $row_count = $check_user_existence_sth->execute($user);
         if ( $row_count == 0 ) {
             if ( $check_user_existence_sth->err ) {
                 mylog_err( $check_user_existence_sth->errstr );
             }
-            return %result;
+            return $result;
         }
 
         # Get number of unique countries from which has user logged in
         my $num_countries_logs_sth =
           $dbh->prepare( $config_sql{num_countries_logs_st} )
-          or do { mylog_err( $dbh->errstr ); return %result; };
+          or do { mylog_err( $dbh->errstr ); return $result; };
         if ( !( $num_countries_logs_sth->execute($user) ) ) {
             mylog_err( $num_countries_logs_sth->errstr );
-            return %result;
+            return $result;
         }
 
         # Get first row of data
-        $result{client_uniq_country_login_count} =
+        $result->{client_uniq_country_login_count} =
           $num_countries_logs_sth->fetchrow_array;
-        if ( !$result{client_uniq_country_login_count} ) {
+        if ( !$result->{client_uniq_country_login_count} ) {
             if ( $num_countries_logs_sth->err ) {
                 mylog_err( $num_countries_logs_sth->errstr );
             }
-            return %result;
+            return $result;
         }
 
         # Print unique number of countries that user was logged in from
-        if ( $result{client_uniq_country_login_count} >
+        if ( $result->{client_uniq_country_login_count} >
             $config{debugging}{country_limit} )
         {
             mylog_info(
-"User $user was logged from more than $config{debugging}{country_limit} countries($result{client_uniq_country_login_count})"
+"User $user was logged from more than $config{debugging}{country_limit} countries($result->{client_uniq_country_login_count})"
             );
         }
         else {
             mylog_info(
-"Number of unique countries logged in from user [$user]: $result{client_uniq_country_login_count}"
+"Number of unique countries logged in from user [$user]: $result->{client_uniq_country_login_count}"
             );
         }
 
     # Returns number of countries from which user logged in to an email via sasl
-        return %result;
+        return $result;
 
     },
 
     'client_uniq_ip_login_count' => sub {
 
-        my (%request) = @_;
-        my (%result)  = ();
-        $result{client_ip_login_count} = 0;
+        my ($request) = shift;
+        my ($result) = undef;
+        $result->{client_ip_login_count} = 0;
 
         # Test if database connection is still alive
         my $rc = $dbh->ping;
@@ -375,56 +375,56 @@ my $last_cache_flush = time;
         }
 
         # Get sasl_username
-        my $user = $request{sasl_username};
+        my $user = $request->{sasl_username};
         if ( !length $user || !($user) ) {
-            return %result;
+            return $result;
         }
 
         # Check if user with given IP already has record
         my $check_user_existence_sth =
           $dbh->prepare( $config_sql{check_user_existence_st} )
-          or do { mylog_err( $dbh->errstr ); return %result; };
+          or do { mylog_err( $dbh->errstr ); return $result; };
         my $row_count = $check_user_existence_sth->execute($user);
         if ( $row_count == 0 ) {
             if ( $check_user_existence_sth->err ) {
                 mylog_err( $check_user_existence_sth->errstr );
             }
-            return %result;
+            return $result;
         }
 
         # Get number of unique IPs from which has user logged in
         my $num_ip_logs_sth = $dbh->prepare( $config_sql{num_ip_logs_st} )
-          or do { mylog_err( $dbh->errstr ); return %result; };
+          or do { mylog_err( $dbh->errstr ); return $result; };
         if ( !( $num_ip_logs_sth->execute($user) ) ) {
             mylog_err( $num_ip_logs_sth->errstr );
-            return %result;
+            return $result;
         }
 
         # Get first row of data
-        $result{client_uniq_ip_login_count} = $num_ip_logs_sth->fetchrow_array;
-        if ( !$result{client_uniq_ip_login_count} ) {
+        $result->{client_uniq_ip_login_count} = $num_ip_logs_sth->fetchrow_array;
+        if ( !$result->{client_uniq_ip_login_count} ) {
             if ( $num_ip_logs_sth->err ) {
                 mylog_err( $num_ip_logs_sth->errstr );
             }
-            return %result;
+            return $result;
         }
 
         # Print unique number of IPs that user was logged in from
         if (
-            $result{client_uniq_ip_login_count} > $config{debugging}{ip_limit} )
+            $result->{client_uniq_ip_login_count} > $config{debugging}{ip_limit} )
         {
             mylog_info(
-"User $user was logged from more than $config{debugging}{ip_limit} ips($result{client_uniq_ip_login_count})"
+"User $user was logged from more than $config{debugging}{ip_limit} ips($result->{client_uniq_ip_login_count})"
             );
         }
         else {
             mylog_info(
-"Number of unique IPs logged in from user [$user]: $result{client_uniq_ip_login_count}"
+"Number of unique IPs logged in from user [$user]: $result->{client_uniq_ip_login_count}"
             );
         }
 
         # Returns number of IPs from which user logged in to an email via sasl
-        return %result;
+        return $result;
 
     },
 
