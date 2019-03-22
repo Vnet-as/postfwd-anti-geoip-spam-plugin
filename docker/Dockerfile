@@ -37,6 +37,10 @@ RUN    apk --no-cache update \
                perl-dev \
     && rm -rf ~/.cpanm
 
+# Install GeoIP database
+RUN mkdir /usr/local/share/GeoIP/
+COPY docker/GeoIP.dat docker/GeoIPv6.dat /usr/local/share/GeoIP/
+
 # Copy entrypoint script
 COPY docker/docker-entrypoint.sh /usr/local/bin/
 RUN chmod 750 /usr/local/bin/docker-entrypoint.sh
