@@ -5,20 +5,37 @@ LABEL maintainer="Postfwd GeoIp Spam Plugin Maintainer <ondrej.vaskoo@gmail.com>
 ENV POSTFWD_ANTISPAM_MAIN_CONFIG_PATH=/etc/postfwd/anti-spam.conf
 ENV POSTFWD_ANTISPAM_SQL_STATEMENTS_CONFIG_PATH=/etc/postfwd/anti-spam-sql-st.conf
 
-# Install dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        libconfig-any-perl \
-        libconfig-tiny-perl \
-        libconfig-ini-perl \
-        libconfig-general-perl \
-        libdbi-perl \
-        libdbd-mysql-perl \
-        libdbd-pg-perl \
-        libgeo-ip-perl \
-        libtime-piece-perl \
-        geoip-database \
-    && rm -rf /var/lib/apt/lists/*
+# Install build tools
+# Build and Install modules
+# Cleanup
+RUN    apk --no-cache update \
+    && apk --no-cache add make \
+                          wget \
+                          gcc \
+                          build-base \
+                          perl-utils \
+                          perl-dev \
+                          geoip-dev \
+                          postgresql-dev \
+                          mysql-dev \
+    && cpan App::cpanminus \
+    && cpanm Geo::IP \
+             IO::Handle \
+             Config::General \
+             Config::Tiny \
+             Config::Any::INI \
+             Config::Any::General \
+             DBI \
+             DBD::Pg \
+             DBD::mysql \
+             Sys::Mmap \
+    && apk del make \
+               wget \
+               gcc \
+               build-base \
+               perl-utils \
+               perl-dev \
+    && rm -rf ~/.cpanm
 
 # Copy entrypoint script
 COPY docker/docker-entrypoint.sh /usr/local/bin/
