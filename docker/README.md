@@ -70,6 +70,7 @@ ip_limit = 20
 [app]
 # Flush database records with last login older than 1 day
 db_flush_interval = 86400
+geoip_db_path = /usr/local/share/GeoIP/GeoIP.dat
 ```
 
 Second one is postfwd rules configuration. Here is sample configuration:

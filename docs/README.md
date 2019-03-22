@@ -87,10 +87,10 @@ CREATE INDEX postfwd_sasl_username ON postfwd_logins (sasl_username);
 
 ### Dependencies
 
-- `Postfwd2` or `Postfwd3`
-- Database (`MySQL` or `PostgreSQL`)
-- Perl modules - `Geo::IP`, `DBI`, `Time::Piece`, `Config::Any`, `DBD::mysql` or `DBD::Pg`
-- GeoIP database
+- `Postfwd2` or `Postfwd3`.
+- Database (`MySQL` or `PostgreSQL`).
+- Perl modules - `Geo::IP`, `DBI`, `Time::Piece`, `Config::Any`, `DBD::mysql` or `DBD::Pg`.
+- GeoIP database located in `/usr/local/share/GeoIP/GeoIP.dat`.
 
 #### Dependencies on RedHat based distributions
 
@@ -179,22 +179,17 @@ port = 3306
 userid = testuser
 password = password
 ```
-### Database cleanup period
-
-<<<<<<< Updated upstream
-The plugin is by default configured to remove records for users with last login date older than 24 hours. This interval can be changed in configuration file.
-=======
 ### Application configuration
 
 The plugin is by default configured to remove records for users with last login date older than 24 hours. This interval can be changed in configuration `app.db_flush_interval`.
 
 Plugin looks by default for GeoIP database file in path `/usr/local/share/GeoIP/GeoIP.dat`. You can override this path in configuration `app.geoip_db_path`.
->>>>>>> Stashed changes
 
 ```INI
 [app]
 # Flush database records with last login older than 1 day
 db_flush_interval = 86400
+geoip_db_path = /usr/local/share/GeoIP/GeoIP.dat
 ```
 
 ## Logging

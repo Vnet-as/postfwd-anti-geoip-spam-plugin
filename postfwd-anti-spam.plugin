@@ -6,10 +6,6 @@ our $VERSION = 1.2;
 # English module for Perl::Critic compliance
 use English qw( -no_match_vars );
 
-# Geo IP
-use Geo::IP;
-my $gi = Geo::IP->new(GEOIP_MEMORY_CACHE);
-
 # DBI
 use DBI;
 
@@ -97,6 +93,9 @@ else {
     mylog_info("Logging destination is file '$config{logging}{logfile}'");
 }
 
+# Geo IP
+use Geo::IP;
+my $gi = Geo::IP->open($config{app}{geoip_db_path}, GEOIP_MEMORY_CACHE | GEOIP_CHECK_CACHE);
 
 # Print info about GeoIP database
 mylog_info('GeoIP Database Informations: ', $gi->database_info);
