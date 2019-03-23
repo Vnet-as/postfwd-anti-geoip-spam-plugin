@@ -1,0 +1,15 @@
+request=smtpd_access_policy
+protocol_state=RCPT
+protocol_name=ESMTP
+helo_name=some.domain.tld
+queue_id=8045F2AB23
+instance=123.456.7
+client_address=$CLIENT_ADDRESS
+reverse_client_name=another.domain.tld
+recipient=bar@foo.tld
+recipient_count=1
+sender=$SASL_USERNAME
+sasl_method=plain
+sasl_username=$SASL_USERNAME
+sasl_sender=$SASL_USERNAME
+
