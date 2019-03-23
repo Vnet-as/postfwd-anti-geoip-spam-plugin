@@ -226,4 +226,14 @@ Check for proper linting with `perlcritic postfwd-anti-spam.plugin`.
 
 Change into directory `./test` and execute `docker-compose -f dev-compose.yml up` to get postfwd and mysql database up.
 
-Send SMTP requests to postfwd policy server using command `nc 127.0.0.1 10040 < <(./dev-request.sh <IP_ADDRESS>)` (replace `<IP_ADDRESS>` with client IP address).
+Send SMTP requests to postfwd policy server, or use testing script to check functionality:
+```bash
+# Manually send postfwd request
+export CLIENT_ADDRESS='1.2.3.4'
+export SASL_USERNAME='testuser@example.com'
+nc 127.0.0.1 10040 < <(envsubst < dev-request)
+
+# Run testing script
+cd tests
+./integration-test.sh
+```
