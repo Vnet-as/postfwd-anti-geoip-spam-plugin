@@ -236,5 +236,5 @@ nc 127.0.0.1 10040 < <(envsubst < dev-request)
 
 # Run testing script
 cd tests
-./integration-compose-test.sh
+DATABASES="mysql postgresql" RUN_COMPOSE=1 ./integration-compose-test.sh
 ```

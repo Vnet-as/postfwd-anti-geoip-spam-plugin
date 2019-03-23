@@ -10,7 +10,7 @@ function send_request {
 
 sleep_duration=10
 
-for DB in mysql postgresql; do
+for DB in ${DATABASES}; do
   # Build and run compose
   if [ "${RUN_COMPOSE}" = "1" ]; then
     docker-compose -f "dev-compose-${DB}.yml" up -d --build > /dev/null
@@ -39,7 +39,7 @@ for DB in mysql postgresql; do
               79.141.110.169
               24.37.219.201
               79.142.52.15
-              46.238.128.94
+              46.238.128.94 46.238.128.94
   )
 
   for client_address in "${addresses[@]}"; do
@@ -66,23 +66,26 @@ for DB in mysql postgresql; do
 
 
   # Verify logs
-  #   1. Check for errors
+  #   1. Check for rrors
   #   2. Check if spam-user exceeded country limit
   #   2. Check if spam-user exceeded IP address limit
-  docker-compose -f "dev-compose-${DB}.yml" logs postfwd-geoip-antispam \
-    | grep -i "error\|fatal" \
-    && echo -e 'ERROR: Errors found in log.\nTEST FAILED!' \
-    && ERR=1
-
-  docker-compose -f "dev-compose-${DB}.yml" logs postfwd-geoip-antispam \
-    | grep "User spam-user1@example.com was logged from more than 5 countries([67])" \
-    || echo -e 'ERROR: User did not exceed country login limit (5) and should!' \
-    && ERR=1
-
-  docker-compose -f "dev-compose-${DB}.yml" logs postfwd-geoip-antispam \
-    | grep "User spam-user2@example.com was logged from more than 20 IP addresses(2[45])" \
-    || echo -e 'ERROR: User did not exceed IP address limit (20) and should!' \
-    && ERR=1
+  if docker-compose -f "dev-compose-${DB}.yml" logs postfwd-geoip-antispam \
+     | grep -i "error\|fatal" \
+     | grep -E -v -e "ERROR.*: Retry [123]/3 - Can't connect to MySQL server on" \
+                  -e "ERROR.*: Retry [123]/3 - could not connect to server: Connection refused"; then
+    echo -e 'ERROR: Errors found in log.\nTEST FAILED!'
+    ERR="${ERR},1"
+  fi
+  if ! docker-compose -f "dev-compose-${DB}.yml" logs postfwd-geoip-antispam \
+       | grep "User spam-user1@example.com was logged from more than 5 countries([67])"; then
+    echo -e 'ERROR: User did not exceed country login limit (5) but should!'
+    ERR="${ERR},2"
+  fi
+  if ! docker-compose -f "dev-compose-${DB}.yml" logs postfwd-geoip-antispam \
+       | grep "User spam-user2@example.com was logged from more than 20 IP addresses(2[45])"; then
+    echo -e 'ERROR: User did not exceed IP address limit (20) but should!'
+    ERR="${ERR},3"
+  fi
 
   # Cleanup
   if [ "${RUN_COMPOSE}" = "1" ]; then
@@ -90,7 +93,7 @@ for DB in mysql postgresql; do
   fi
 done
 
-if [ "$ERR" = "1" ]; then
-  echo "Tests ended up with errors."
+if [ -n "$ERR" ]; then
+  echo "Tests ended up with errors[${ERR}]."
   exit 1
 fi
