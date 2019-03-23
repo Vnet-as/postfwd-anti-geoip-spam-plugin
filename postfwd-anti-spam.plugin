@@ -336,16 +336,14 @@ my $last_cache_flush = time;
         }
 
         # Print unique number of countries that user was logged in from
+        mylog_info(
+"Number of unique countries logged in from user [$user]: $result->{client_uniq_country_login_count}"
+        );
         if ( $result->{client_uniq_country_login_count} >
             $config{debugging}{country_limit} )
         {
             mylog_info(
 "User $user was logged from more than $config{debugging}{country_limit} countries($result->{client_uniq_country_login_count})"
-            );
-        }
-        else {
-            mylog_info(
-"Number of unique countries logged in from user [$user]: $result->{client_uniq_country_login_count}"
             );
         }
 
@@ -409,16 +407,14 @@ my $last_cache_flush = time;
         }
 
         # Print unique number of IPs that user was logged in from
+        mylog_info(
+"Number of unique IPs logged in from user [$user]: $result->{client_uniq_ip_login_count}"
+        );
         if (
             $result->{client_uniq_ip_login_count} > $config{debugging}{ip_limit} )
         {
             mylog_info(
-"User $user was logged from more than $config{debugging}{ip_limit} ips($result->{client_uniq_ip_login_count})"
-            );
-        }
-        else {
-            mylog_info(
-"Number of unique IPs logged in from user [$user]: $result->{client_uniq_ip_login_count}"
+"User $user was logged from more than $config{debugging}{ip_limit} IP addresses($result->{client_uniq_ip_login_count})"
             );
         }
 
