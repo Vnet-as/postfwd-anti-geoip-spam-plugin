@@ -1,4 +1,3 @@
-USE postfwd-antispam-test;
 CREATE TABLE IF NOT EXISTS postfwd_logins (
    sasl_username varchar(100),
    ip_address varchar(16),
