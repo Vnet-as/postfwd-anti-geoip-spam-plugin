@@ -1,16 +1,14 @@
 ---
 version: "3.3"
 services:
-  mysql-postfwd-db:
-    image: mariadb:latest
+  postgres-postfwd-db:
+    image: postgres:latest
     ports:
-      - "3306:3306"
+      - "5432:5432"
     environment:
-      - MYSQL_ALLOW_EMPTY_PASSWORD=no
-      - MYSQL_RANDOM_ROOT_PASSWORD=yes
-      - MYSQL_USER=testuser
-      - MYSQL_PASSWORD=testpasswordpostfwdantispam
-      - MYSQL_DATABASE=postfwd-antispam-test
+      - POSTGRES_USER=testuser
+      - POSTGRES_PASSWORD=testpasswordpostfwdantispam
+      - POSTGRES_DB=postfwd_antispam_test
     volumes:
       - type: bind
         source: ./dev-create-antispam-db.sql
@@ -23,7 +21,7 @@ services:
       - "10040:10040"
     volumes:
       - type: bind
-        source: ./dev-anti-spam.conf
+        source: ./dev-anti-spam-postgres.conf
         target: /etc/postfwd/anti-spam.conf
       - type: bind
         source: ./dev-postfwd.cf

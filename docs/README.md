@@ -55,7 +55,7 @@ This will run `postfwd2` or `postfwd3` (based on docker tag) with default argume
 
 ## Development and Prototyping with Docker
 
-Complete development environment with postfwd, anti-spam plugin and mysql database correctly configured together can be run with command `docker-compose -f dev-compose.yml up` from directory `./tests/`.
+Complete development environment with postfwd, anti-spam plugin and mysql/postgresql database correctly configured together can be run with command `docker-compose -f dev-compose-mysql.yml up` or `docker-compose -f dev-compose-postgresql.yml up` from directory `./tests/`.
 
 Note for overriding postfwd arguments:
 
@@ -179,6 +179,7 @@ port = 3306
 userid = testuser
 password = password
 ```
+
 ### Application configuration
 
 The plugin is by default configured to remove records for users with last login date older than 24 hours. This interval can be changed in configuration `app.db_flush_interval`.
@@ -224,7 +225,7 @@ Located in separate `README` file [DB-Queries.md](DB-Queries.md).
 
 Check for proper linting with `perlcritic postfwd-anti-spam.plugin`.
 
-Change into directory `./test` and execute `docker-compose -f dev-compose.yml up` to get postfwd and mysql database up.
+Change into directory `./test` and execute `docker-compose -f dev-compose-mysql.yml up` or `docker-compose -f dev-compose-postgresql.yml up` to get postfwd and mysql/postgresql database up.
 
 Send SMTP requests to postfwd policy server, or use testing script to check functionality:
 ```bash
@@ -235,5 +236,5 @@ nc 127.0.0.1 10040 < <(envsubst < dev-request)
 
 # Run testing script
 cd tests
-./integration-test.sh
+./integration-compose-test.sh
 ```
