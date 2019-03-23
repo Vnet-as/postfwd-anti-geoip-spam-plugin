@@ -1,7 +1,8 @@
 # Supported tags and respective `Dockerfile` links
 
 * [`latest` (Dockerfile)](https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/blob/master/docker/Dockerfile)
-* [`v1.2` (Dockerfile)](https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/blob/v1.2/Dockerfile)
+* [`v1.30` (Dockerfile)](https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/blob/v1.30/docker/Dockerfile)
+* [`v1.21` (Dockerfile)](https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/blob/v1.21/docker/Dockerfile)
 
 # Postfwd GeoIP Anti-Spam Plugin
 
@@ -69,6 +70,7 @@ ip_limit = 20
 [app]
 # Flush database records with last login older than 1 day
 db_flush_interval = 86400
+geoip_db_path = /usr/local/share/GeoIP/GeoIP.dat
 ```
 
 Second one is postfwd rules configuration. Here is sample configuration:

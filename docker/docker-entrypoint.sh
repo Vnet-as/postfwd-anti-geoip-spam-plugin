@@ -1,10 +1,10 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 set -eo pipefail
 
-# If command starts with an option, prepend postfwd2
+# If command starts with an option, prepend postfwd3
 if [ "${1:0:1}" = '-' ]; then
-  set -- postfwd2 "$@"
+  set -- postfwd3 "$@"
 fi
 
 # Check if help, version or manual arguments were used
@@ -19,7 +19,7 @@ for arg; do
 done
 
 
-if [ "$1" = "postfwd1"  ] || [ "$1" = "postfwd2" ] && [ -z "$want_help" ]; then
+if [ "$1" = "postfwd3" ] && [ -z "$want_help" ]; then
   if [ ! -f /etc/postfwd/anti-spam.conf ]; then
     echo >&2 'ERROR: Anti-spam plugin configuration file /etc/postfwd/anti-spam.conf was not found. Perhaps you forgot to mount it using "-v </absolute/path/to/anti-spam.conf>:/etc/postfwd/anti-spam.conf".'
     exit 1

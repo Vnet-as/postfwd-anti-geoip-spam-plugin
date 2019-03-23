@@ -23,14 +23,23 @@ If you are interested in theory about how botnet spam works and motivation for c
 
 If you are interested in how your users got their mail accounts hacked, check out [bsdly](https://bsdly.blogspot.com) blog about slow distributed brute force attack on SSH passwords, which also applies to pop3/imap logins [Hail Mary Cloud](http://bsdly.blogspot.com/2013/10/the-hail-mary-cloud-and-lessons-learned.html).
 
-Plugin was tested with _postfwd2 ver. 1.39_ with MySQL and PostgreSQL backend.
+## Plugin Compatility Matrix
+
+- Release `v1.21` works with `postfwd1` and `postfwd2` versions `1.XX` (eg. `1.39`) and higher minor versions.
+- Releases `v1.30` and higher are compatible only with `postfwd3` versions `2.XX`.
+- `master` branch is compatible only with `postfwd3` versions `2.XX`.
+- Supported database backends are **MySQL** and **PostgreSQL**.
 
 ## Running with Docker
 
 Prebuilt ready-to-use Docker image is located on DockerHub and can be simply pulled by command:
 
 ```bash
+# Postfwd3 tags
 docker pull lirt/postfwd-anti-geoip-spam-plugin:latest
+docker pull lirt/postfwd-anti-geoip-spam-plugin:v1.30
+# Postfwd1, Postfwd2 tags
+docker pull lirt/postfwd-anti-geoip-spam-plugin:v1.21
 ```
 
 To run postfwd with geoip-plugin, run docker with configuration files mounted as volumes:
@@ -39,14 +48,14 @@ To run postfwd with geoip-plugin, run docker with configuration files mounted as
 docker run \
     -v </absolute/path/to/anti-spam.conf>:/etc/postfwd/anti-spam.conf \
     -v </absolute/path/to/postfwd.cf>:/etc/postfwd/postfwd.cf \
-    lirt/postfwd-anti-geoip-spam-plugin
+    lirt/postfwd-anti-geoip-spam-plugin:latest
 ```
 
-This will run `postfwd2` with default arguments, reading postfwd rules file from your mounted volume file `postfwd.cf` and using anti-spam configuration from your file `anti-spam.conf`.
+This will run `postfwd2` or `postfwd3` (based on docker tag) with default arguments, reading postfwd rules file from your mounted volume file `postfwd.cf` and using anti-spam configuration from your file `anti-spam.conf`.
 
 ## Development and Prototyping with Docker
 
-Complete development environment with postfwd, anti-spam plugin and mysql database correctly configured together can be run with command `docker-compose -f dev-compose.yml up` from directory `./tests/`.
+Complete development environment with postfwd, anti-spam plugin and mysql/postgresql database correctly configured together can be run with command `docker-compose -f dev-compose-mysql.yml up` or `docker-compose -f dev-compose-postgresql.yml up` from directory `./tests/`.
 
 Note for overriding postfwd arguments:
 
@@ -78,10 +87,10 @@ CREATE INDEX postfwd_sasl_username ON postfwd_logins (sasl_username);
 
 ### Dependencies
 
-- `Postfwd2`
-- Database (`MySQL` or `PostgreSQL`)
-- Perl modules - `Geo::IP`, `DBI`, `Time::Piece`, `Config::Any`, `DBD::mysql` or `DBD::Pg`
-- GeoIP database
+- `Postfwd2` or `Postfwd3`.
+- Database (`MySQL` or `PostgreSQL`).
+- Perl modules - `Geo::IP`, `DBI`, `Time::Piece`, `Config::Any`, `DBD::mysql` or `DBD::Pg`.
+- GeoIP database located in `/usr/local/share/GeoIP/GeoIP.dat`.
 
 #### Dependencies on RedHat based distributions
 
@@ -170,14 +179,18 @@ port = 3306
 userid = testuser
 password = password
 ```
-### Database cleanup period
 
-The plugin is by default configured to remove records for users with last login date older than 24 hours. This interval can be changed in configuration file.
+### Application configuration
+
+The plugin is by default configured to remove records for users with last login date older than 24 hours. This interval can be changed in configuration `app.db_flush_interval`.
+
+Plugin looks by default for GeoIP database file in path `/usr/local/share/GeoIP/GeoIP.dat`. You can override this path in configuration `app.geoip_db_path`.
 
 ```INI
 [app]
 # Flush database records with last login older than 1 day
 db_flush_interval = 86400
+geoip_db_path = /usr/local/share/GeoIP/GeoIP.dat
 ```
 
 ## Logging
@@ -206,79 +219,22 @@ If you use `logrotate` to rotate anti-spam logs, use option `copytruncate` which
 
 ## Useful database queries
 
-1. Print mail accounts, total number of logins, total number of unique ip addresses and unique states for users who were logged in from more than 3 countries (Most useful for me):
-
-```sql
-SELECT sasl_username,
-   SUM(login_count),
-   COUNT(*) AS ip_address_count,
-   COUNT(DISTINCT state_code) AS country_login_count
-FROM postfwd_logins
-GROUP BY sasl_username
-HAVING country_login_count > 3;
-```
-
-2. Print users who are logged in from more than 1 country and write number of countries from which they were logged in:
-
-```sql
-SELECT sasl_username, COUNT(DISTINCT state_code) AS country_login_count
-FROM postfwd_logins
-GROUP BY sasl_username
-HAVING country_login_count > 1;
-```
-
-3. Dump all IP addresses and login counts for users who were logged in from more than 1 country:
-
-```sql
-SELECT * FROM postfwd_logins
-JOIN (
-   SELECT sasl_username
-   FROM postfwd_logins
-   GROUP BY sasl_username
-   HAVING COUNT(DISTINCT state_code) > 1
-   ) AS users_logged_from_multiple_states
-      ON postfwd_logins.sasl_username = users_logged_from_multiple_states.sasl_username
-ORDER BY postfwd_logins.sasl_username;
-```
-
-4. Print summary of logins for user `<SASL_USERNAME>`:
-
-```sql
-SELECT SUM(login_count)
-FROM postfwd_logins
-WHERE sasl_username='<SASL_USERNAME>';
-```
-
-5. Print number of distinct login *state_codes* for user `<SASL_USERNAME>`:
-
-```sql
-SELECT COUNT(DISTINCT state_code)
-FROM postfwd_logins
-WHERE sasl_username='<SASL_USERNAME>';
-```
-
-6. Print number of distinct IP addresses for user `<SASL_USERNAME>`:
-
-```sql
-SELECT COUNT(DISTINCT ip_address)
-FROM postfwd_logins
-WHERE sasl_username='<SASL_USERNAME>';
-```
-
-7. Print number of IP addresses for each *state_code* for user `<SASL_USERNAME>`:
-
-```sql
-SELECT sasl_username, state_code, COUNT(state_code) AS country_login_count
-FROM postfwd_logins
-WHERE sasl_username='<SASL_USERNAME>'
-GROUP BY state_code
-ORDER BY country_login_count;
-```
+Located in separate `README` file [DB-Queries.md](DB-Queries.md).
 
 ## Development and testing
 
 Check for proper linting with `perlcritic postfwd-anti-spam.plugin`.
 
-Change into directory `./test` and execute `docker-compose -f dev-compose.yml up` to get postfwd and mysql database up.
+Change into directory `./test` and execute `docker-compose -f dev-compose-mysql.yml up` or `docker-compose -f dev-compose-postgresql.yml up` to get postfwd and mysql/postgresql database up.
 
-Send SMTP requests to postfwd policy server using command `nc 127.0.0.1 10040 < <(./dev-request.sh <IP_ADDRESS>)` (replace `<IP_ADDRESS>` with client IP address).
+Send SMTP requests to postfwd policy server, or use testing script to check functionality:
+```bash
+# Manually send postfwd request
+export CLIENT_ADDRESS='1.2.3.4'
+export SASL_USERNAME='testuser@example.com'
+nc 127.0.0.1 10040 < <(envsubst < dev-request)
+
+# Run testing script
+cd tests
+DATABASES="mysql postgresql" RUN_COMPOSE=1 ./integration-compose-test.sh
+```

@@ -1,0 +1,28 @@
+---
+version: "3.3"
+services:
+  postgres-postfwd-db:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=testuser
+      - POSTGRES_PASSWORD=testpasswordpostfwdantispam
+      - POSTGRES_DB=postfwd_antispam_test
+    volumes:
+      - type: bind
+        source: ./dev-create-antispam-db.sql
+        target: /docker-entrypoint-initdb.d/dev-create-antispam-db.sql
+  postfwd-geoip-antispam:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    ports:
+      - "10040:10040"
+    volumes:
+      - type: bind
+        source: ./dev-anti-spam-postgres.conf
+        target: /etc/postfwd/anti-spam.conf
+      - type: bind
+        source: ./dev-postfwd.cf
+        target: /etc/postfwd/postfwd.cf
