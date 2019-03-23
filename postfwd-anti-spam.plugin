@@ -334,6 +334,7 @@ my $last_cache_flush = time;
             }
             return $result;
         }
+        $request->{client_uniq_country_login_count} = $result->{client_uniq_country_login_count};
 
         # Print unique number of countries that user was logged in from
         mylog_info(
@@ -405,6 +406,7 @@ my $last_cache_flush = time;
             }
             return $result;
         }
+        $request->{client_uniq_ip_login_count} = $result->{client_uniq_ip_login_count};
 
         # Print unique number of IPs that user was logged in from
         mylog_info(
