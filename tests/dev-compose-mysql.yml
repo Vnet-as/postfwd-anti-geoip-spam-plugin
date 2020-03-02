@@ -30,3 +30,6 @@ services:
       - type: bind
         source: ./dev-postfwd.cf
         target: /etc/postfwd/postfwd.cf
+      - type: bind
+        source: ./ip_whitelist.txt
+        target: /etc/postfwd/ip_whitelist.txt
