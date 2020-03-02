@@ -127,7 +127,9 @@ Plugin configuration file `anti-spam.conf` is INI style configuration file, in w
 
 ### Postfwd configuration
 
-Add following rules to postfwd configuration file `postfwd.cf`. You can use your own message and value of parameter `client_uniq_country_login_count`, which sets maximum number of unique countries to allow user to log in via sasl.
+Add following rules to postfwd configuration file `postfwd.cf`. You can use your own message and value of parameters:
+- `client_uniq_country_login_count`: Sets maximum number of unique countries to allow user to log in via sasl.
+- `client_uniq_ip_login_count`: Sets maximum number of unique IP addresses to allow user to log in via sasl.
 
 ```bash
 # Anti spam botnet rule:
