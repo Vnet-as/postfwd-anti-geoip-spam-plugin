@@ -28,6 +28,7 @@ RUN    apk --no-cache update \
              DBI \
              DBD::Pg \
              DBD::mysql \
+             Net::Subnet \
              Sys::Mmap \
     && apk del make \
                wget \
