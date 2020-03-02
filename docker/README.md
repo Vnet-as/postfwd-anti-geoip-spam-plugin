@@ -81,26 +81,13 @@ Second one is postfwd rules configuration. Here is sample configuration:
 # to be able to login from max. 5 different countries, otherwise it will
 # be blocked from sending messages.
 
-&&PRIVATE_RANGES { \
-   client_address=!!(10.0.0.0/8) ; \
-   client_address=!!(172.16.0.0/12) ; \
-   client_address=!!(192.168.0.0/16) ; \
-};
-&&LOOPBACK_RANGE { \
-   client_address=!!(127.0.0.0/8) ; \
-};
-
 id=COUNTRY_LOGIN_COUNT ; \
    sasl_username=~^(.+)$ ; \
-   &&PRIVATE_RANGES ; \
-   &&LOOPBACK_RANGE ; \
    incr_client_country_login_count != 0 ; \
    action=jump(BAN_BOTNET);
 
 id=BAN_BOTNET ; \
    sasl_username=~^(.+)$ ; \
-   &&PRIVATE_RANGES ; \
-   &&LOOPBACK_RANGE ; \
    client_uniq_country_login_count > 5 ; \
    action=rate(sasl_username/1/3600/554 Your mail account ($$sasl_username) was compromised. Please change your password immediately after next login.);
 ```
