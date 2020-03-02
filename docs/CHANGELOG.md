@@ -31,6 +31,28 @@ one IP CIDR must be entered per line):
 203.0.113.123/32
 ```
 
+## Version 1.30 - Postfwd3 support, Integration Testing [23. Mar 2019]
+
+This release uses new postfwd docker tag 2.00, which uses new `postfwd3` script.
+
+Postfwd3 changed plugin interface and therefore this release is not compatible with
+`postfwd1` and `postfwd2`. If you want to use older postfwd versions, use tag `v1.21`.
+
+Postfwd3 uses Alpine Linux for docker, so the dockerfile had to be rewritten.
+
+To better work with GeoIP database, there is new configuration option `geoip_db_path`,
+which defaults to `/usr/local/share/GeoIP/GeoIP.dat`.
+
+There is small change to logging, number of countries and unique IPs is logged on each
+request loop.
+
+A lot of rework was done in tests directory. There is docker-compose with postgresql.
+Also shell script, which automatically runs docker-compose for both supported databases
+and does integration test with sample requests and verification through logs.
+
+Plugin item now exports `request{client_uniq_ip_login_count}`
+and `request{client_uniq_country_login_count}` instead of `result*`.
+
 ## Version 1.2 [11. Mar 2019]
 
 This stable release has changes mainly in linting, readability and testability, but also
