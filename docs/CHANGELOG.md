@@ -2,6 +2,35 @@
 
 This changelog notes changes between versions of Postfwd GeoIP Anti-Spam plugin.
 
+## Version 1.40 [2. Mar 2020]
+
+This stable release contains IP whitelisting feature (Reported as bug and requested by @csazku in https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/issues/50).
+
+This release has one new CPAN dependency - `Net::Subnet`.
+
+You can specify line `ip_whitelist = 198.51.100.0/24,203.0.113.123/32` in main
+configuration file in order to skip incrementing of login count for users
+who are logging into email from specified IP addresses.
+This list must be comma separated without whitespaces and IP address must always
+end with CIDR mask (for plain IPs `/32` must be used).
+
+Alternative version is to read IP whitelist from file, which can be specified in
+main configuration file like `ip_whitelist_path = /etc/postfwd/ip_whitelist.txt`
+and whitelisting file must have following format (comments start with `#` and
+one IP CIDR must be entered per line):
+
+```bash
+###
+# IP ranges must be in CIDR format with prefix specified
+# for all IP addresses with `/<NUM>` notation
+###
+# Private ranges
+10.0.0.0/8
+# Whitelisted test IP addresses
+198.51.100.0/24
+203.0.113.123/32
+```
+
 ## Version 1.2 [11. Mar 2019]
 
 This stable release has changes mainly in linting, readability and testability, but also
