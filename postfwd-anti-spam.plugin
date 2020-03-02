@@ -13,6 +13,9 @@ use DBI;
 use IO::Handle;
 use Time::Piece;
 
+# For subnet matching and IP address validation
+use Net::Subnet;
+
 # Configure default path to configuration files
 # or read them from environment variables
 my $cfg_anti_spam_path      = '/etc/postfix/anti-spam.conf';
@@ -92,6 +95,42 @@ else {
     $log_file_fh->autoflush;
     mylog_info("Logging destination is file '$config{logging}{logfile}'");
 }
+
+# IP WHITELIST
+# Do not whitelist any IP addresses by default
+my $ip_whitelist = subnet_matcher qw(
+    255.255.255.255/32
+);
+
+# Make sure that either ip_whitelist or ip_whitelist_path are used in configuration file
+if ( ($config{app}{ip_whitelist} || length $config{app}{ip_whitelist}) &&
+     ($config{app}{ip_whitelist_path} || length $config{app}{ip_whitelist_path}) ) {
+    mylog_fatal('Both "ip_whitelist" and "ip_whitelist_path" are defined! Please choose only one method of whitelisting.');
+}
+# Set whitelist according to config variable ip_whitelist
+if ( $config{app}{ip_whitelist} || length $config{app}{ip_whitelist} ) {
+    $ip_whitelist = subnet_matcher(split /,/mxs, $config{app}{ip_whitelist});
+    mylog_info('IP whitelist set to CIDRs: ', $config{app}{ip_whitelist});
+}
+# Read list of IP addresses to whitelist from file ip_whitelist_path and set whitelist according to it
+if ( $config{app}{ip_whitelist_path} || length $config{app}{ip_whitelist_path} ) {
+    open my $ip_whitelist_fh, '<:encoding(UTF-8)', $config{app}{ip_whitelist_path} or die "ERROR: Could not open file '$config{app}{ip_whitelist_path}' $ERRNO\n";
+
+    my @ip_list;
+    while (my $row = <$ip_whitelist_fh>) {
+      chomp $row;
+      if ( $row =~ m/^\s*\#/msx ) {
+          next;
+      }
+      push @ip_list, $row;
+    }
+
+    $ip_whitelist = subnet_matcher(@ip_list);
+    close $ip_whitelist_fh or die "ERROR: Could not close file '$config{app}{ip_whitelist_path}' $ERRNO\n";
+    mylog_info('IP whitelist set to file: ', $config{app}{ip_whitelist_path});
+    mylog_info('IP CIDRs in whitelist file: ', join(', ', @ip_list));
+}
+
 
 # Geo IP
 use Geo::IP;
@@ -174,6 +213,11 @@ my $last_cache_flush = time;
 
             mylog_info("DB in pid $PID cleared!");
             $last_cache_flush = time;
+        }
+
+        # Check if IP address is in whitelist and return from function if yes
+        if ( $ip_whitelist->($request->{client_address}) ) {
+            return $result;
         }
 
         # Get sasl_username from request
