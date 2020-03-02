@@ -86,11 +86,6 @@ Second one is postfwd rules configuration. Here is sample configuration:
 # to be able to login from max. 5 different countries or 20 different IP
 # addresses, otherwise it will be blocked from sending messages.
 
-id=COUNTRY_LOGIN_COUNT ;
-   sasl_username=~^(.+)$ ;
-   incr_client_country_login_count != 0 ;
-   action=dunno ;
-
 id=BAN_BOTNET_COUNTRY ;
    sasl_username=~^(.+)$ ;
    client_uniq_country_login_count > 5 ;
