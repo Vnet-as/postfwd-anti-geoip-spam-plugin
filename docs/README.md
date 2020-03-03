@@ -37,7 +37,7 @@ Prebuilt ready-to-use Docker image is located on DockerHub and can be simply pul
 ```bash
 # Postfwd3 tags
 docker pull lirt/postfwd-anti-geoip-spam-plugin:latest
-docker pull lirt/postfwd-anti-geoip-spam-plugin:v1.30
+docker pull lirt/postfwd-anti-geoip-spam-plugin:v1.40
 # Postfwd1, Postfwd2 tags
 docker pull lirt/postfwd-anti-geoip-spam-plugin:v1.21
 ```
@@ -89,7 +89,7 @@ CREATE INDEX postfwd_sasl_username ON postfwd_logins (sasl_username);
 
 - `Postfwd2` or `Postfwd3`.
 - Database (`MySQL` or `PostgreSQL`).
-- Perl modules - `Geo::IP`, `DBI`, `Time::Piece`, `Config::Any`, `DBD::mysql` or `DBD::Pg`.
+- Perl modules - `Geo::IP`, `DBI`, `Time::Piece`, `Config::Any`, `Net::Subnet`, `DBD::mysql` or `DBD::Pg`.
 - GeoIP database located in `/usr/local/share/GeoIP/GeoIP.dat`.
 
 #### Dependencies on RedHat based distributions
@@ -102,7 +102,8 @@ yum install -y 'perl(Geo::IP)' \
                'perl(Config::Any)' \
                'perl(DBI)' \
                'perl(DBD::mysql)' \
-               'perl(DBD::Pg)'
+               'perl(DBD::Pg)' \
+               'perl(Net::Subnet)'
 ```
 
 #### Dependencies on Debian based distributions
@@ -116,6 +117,7 @@ apt-get install -y libgeo-ip-perl \
                    libdbi-perl \
                    libdbd-mysql-perl \
                    libdbd-pg-perl \
+                   libnet-subnet-perl \
                    geoip-database
 ```
 
@@ -125,41 +127,25 @@ Plugin configuration file `anti-spam.conf` is INI style configuration file, in w
 
 ### Postfwd configuration
 
-Add following rules to postfwd configuration file `postfwd.cf`. You can use your own message and value of parameter `client_uniq_country_login_count`, which sets maximum number of unique countries to allow user to log in via sasl.
+Add following rules to postfwd configuration file `postfwd.cf`. You can use your own message and value of parameters:
+- `client_uniq_country_login_count`: Sets maximum number of unique countries to allow user to log in via sasl.
+- `client_uniq_ip_login_count`: Sets maximum number of unique IP addresses to allow user to log in via sasl.
 
 ```bash
 # Anti spam botnet rule:
 # This example shows how to limit e-mail address defined by `sasl_username`
-# to be able to login from max. 5 different countries, otherwise it will
-# be blocked from sending messages.
+# to be able to login from max. 5 different countries or 20 different IP
+# addresses, otherwise it will be blocked from sending messages.
 
-&&PRIVATE_RANGES { \
-   client_address=!!(10.0.0.0/8) ; \
-   client_address=!!(172.16.0.0/12) ; \
-   client_address=!!(192.168.0.0/16) ; \
-};
-&&LOOPBACK_RANGE { \
-   client_address=!!(127.0.0.0/8) ; \
-};
+id=BAN_BOTNET_COUNTRY ;
+   sasl_username=~^(.+)$ ;
+   client_uniq_country_login_count > 5 ;
+   action=rate(sasl_username/1/3600/554 Your mail account ($$sasl_username) was compromised. Please change your password immediately after next login.) ;
 
-id=COUNTRY_LOGIN_COUNT ; \
-   sasl_username=~^(.+)$ ; \
-   &&PRIVATE_RANGES ; \
-   &&LOOPBACK_RANGE ; \
-   incr_client_country_login_count != 0 ; \
-   action=jump(BAN_BOTNET)
-
-id=BAN_BOTNET ; \
-   sasl_username=~^(.+)$ ; \
-   &&PRIVATE_RANGES ; \
-   &&LOOPBACK_RANGE ; \
-   client_uniq_country_login_count > 5 ; \
-   action=rate(sasl_username/1/3600/554 Your mail account ($$sasl_username) was compromised. Please change your password immediately after next login.);
-
-id=BAN_BOTNET_IP ; \
-   sasl_username=~^(.+)$ ; \
-   client_uniq_ip_login_count > 20 ; \
-   action=rate(sasl_username/1/3600/554 Your mail account ($$sasl_username): Too many messages from different hosts.);
+id=BAN_BOTNET_IP ;
+   sasl_username=~^(.+)$ ;
+   client_uniq_ip_login_count > 20 ;
+   action=rate(sasl_username/1/3600/554 Your mail account ($$sasl_username) was compromised. Please change your password immediately after next login.) ;
 ```
 
 ### Database backend configuration
@@ -168,7 +154,7 @@ Update configuration file `/etc/postfix/anti-spam.conf` with your credentials to
 
 In case you use different path as `/etc/postfix/anti-spam.conf` and `/etc/postfix/anti-spam-sql-st.conf` to main configuration file, export environment variables `POSTFWD_ANTISPAM_MAIN_CONFIG_PATH` and `POSTFWD_ANTISPAM_SQL_STATEMENTS_CONFIG_PATH` with your custom path.
 
-```INI
+```conf
 [database]
 # driver = Pg
 driver = mysql
@@ -186,11 +172,17 @@ The plugin is by default configured to remove records for users with last login 
 
 Plugin looks by default for GeoIP database file in path `/usr/local/share/GeoIP/GeoIP.dat`. You can override this path in configuration `app.geoip_db_path`.
 
-```INI
+You can whitelist set of IP addresses or subnets in CIDR format by using configuration setting `app.ip_whitelist`. Whitelisting means, that if client logs into email account from IP address, which IS in whitelist, it will NOT increment login count for this pair of `sasl_username|client_address`.
+
+```conf
 [app]
 # Flush database records with last login older than 1 day
 db_flush_interval = 86400
 geoip_db_path = /usr/local/share/GeoIP/GeoIP.dat
+# IP whitelist must be valid comma separated strings in CIDR format without whitespaces.
+# It specifies IP addresses which will NOT be counted into user logins database.
+ip_whitelist = 198.51.100.0/24,203.0.113.123/32
+# ip_whitelist_path = /etc/postfwd/ip_whitelist.txt
 ```
 
 ## Logging
@@ -201,7 +193,7 @@ You can disable logging completely by updating value of statement `debug` to `0`
 
 Example configuration of file `anti-spam.conf`:
 
-```INI
+```conf
 [logging]
 # Remove statement `logfile`, or set it to empty `logfile = ` to log into STDOUT
 logfile = /var/log/postfwd_plugin.log
@@ -212,6 +204,8 @@ autoflush = 0
 debug = 1
 # Make log after exceeding unique country count limit
 country_limit = 5
+# Make log after exceeding unique ip count limit
+ip_limit = 20
 ```
 
 If you use `logrotate` to rotate anti-spam logs, use option `copytruncate` which prevents [logging errors](https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/issues/6) when log file is rotated.

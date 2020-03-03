@@ -1,4 +1,4 @@
-FROM postfwd/postfwd:v2.00
+FROM postfwd/postfwd:v2.02
 
 LABEL maintainer="Postfwd GeoIp Spam Plugin Maintainer <ondrej.vaskoo@gmail.com>"
 
@@ -28,6 +28,7 @@ RUN    apk --no-cache update \
              DBI \
              DBD::Pg \
              DBD::mysql \
+             Net::Subnet \
              Sys::Mmap \
     && apk del make \
                wget \

@@ -1,6 +1,7 @@
 # Supported tags and respective `Dockerfile` links
 
 * [`latest` (Dockerfile)](https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/blob/master/docker/Dockerfile)
+* [`v1.40` (Dockerfile)](https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/blob/v1.40/docker/Dockerfile)
 * [`v1.30` (Dockerfile)](https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/blob/v1.30/docker/Dockerfile)
 * [`v1.21` (Dockerfile)](https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/blob/v1.21/docker/Dockerfile)
 
@@ -71,6 +72,10 @@ ip_limit = 20
 # Flush database records with last login older than 1 day
 db_flush_interval = 86400
 geoip_db_path = /usr/local/share/GeoIP/GeoIP.dat
+# IP whitelist must be valid comma separated strings in CIDR format without whitespaces.
+# It specifies IP addresses which will NOT be counted into user logins database.
+# ip_whitelist = 198.51.100.0/24,203.0.113.123/32
+# ip_whitelist_path = /etc/postfwd/ip_whitelist.txt
 ```
 
 Second one is postfwd rules configuration. Here is sample configuration:
@@ -78,29 +83,16 @@ Second one is postfwd rules configuration. Here is sample configuration:
 ```bash
 # Anti spam botnet rule:
 # This example shows how to limit e-mail address defined by `sasl_username`
-# to be able to login from max. 5 different countries, otherwise it will
-# be blocked from sending messages.
+# to be able to login from max. 5 different countries or 20 different IP
+# addresses, otherwise it will be blocked from sending messages.
 
-&&PRIVATE_RANGES { \
-   client_address=!!(10.0.0.0/8) ; \
-   client_address=!!(172.16.0.0/12) ; \
-   client_address=!!(192.168.0.0/16) ; \
-};
-&&LOOPBACK_RANGE { \
-   client_address=!!(127.0.0.0/8) ; \
-};
+id=BAN_BOTNET_COUNTRY ;
+   sasl_username=~^(.+)$ ;
+   client_uniq_country_login_count > 5 ;
+   action=rate(sasl_username/1/3600/554 Your mail account ($$sasl_username) was compromised. Please change your password immediately after next login.) ;
 
-id=COUNTRY_LOGIN_COUNT ; \
-   sasl_username=~^(.+)$ ; \
-   &&PRIVATE_RANGES ; \
-   &&LOOPBACK_RANGE ; \
-   incr_client_country_login_count != 0 ; \
-   action=jump(BAN_BOTNET);
-
-id=BAN_BOTNET ; \
-   sasl_username=~^(.+)$ ; \
-   &&PRIVATE_RANGES ; \
-   &&LOOPBACK_RANGE ; \
-   client_uniq_country_login_count > 5 ; \
-   action=rate(sasl_username/1/3600/554 Your mail account ($$sasl_username) was compromised. Please change your password immediately after next login.);
+id=BAN_BOTNET_IP ;
+   sasl_username=~^(.+)$ ;
+   client_uniq_ip_login_count > 20 ;
+   action=rate(sasl_username/1/3600/554 Your mail account ($$sasl_username) was compromised. Please change your password immediately after next login.) ;
 ```

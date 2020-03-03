@@ -19,6 +19,8 @@ services:
     build:
       context: ../
       dockerfile: docker/Dockerfile
+    environment:
+      - PROG=postfwd3
     ports:
       - "10040:10040"
     volumes:
@@ -28,3 +30,6 @@ services:
       - type: bind
         source: ./dev-postfwd.cf
         target: /etc/postfwd/postfwd.cf
+      - type: bind
+        source: ./ip_whitelist.txt
+        target: /etc/postfwd/ip_whitelist.txt

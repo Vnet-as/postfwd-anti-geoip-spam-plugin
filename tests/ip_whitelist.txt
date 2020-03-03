@@ -1,0 +1,11 @@
+###
+# IP ranges must be in CIDR format with prefix specified
+# for all IP addresses with `/<NUM>` notation
+###
+# Private ranges
+10.0.0.0/8
+172.16.0.0/12
+192.168.0.0/16
+# Whitelisted test IP addresses
+198.51.100.0/24
+203.0.113.123/32
