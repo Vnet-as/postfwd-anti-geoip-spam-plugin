@@ -23,7 +23,7 @@ If you are interested in theory about how botnet spam works and motivation for c
 
 If you are interested in how your users got their mail accounts hacked, check out [bsdly](https://bsdly.blogspot.com) blog about slow distributed brute force attack on SSH passwords, which also applies to pop3/imap logins [Hail Mary Cloud](http://bsdly.blogspot.com/2013/10/the-hail-mary-cloud-and-lessons-learned.html).
 
-## Plugin Compatility Matrix
+## Plugin Compatibility Matrix
 
 - Release `v1.21` works with `postfwd1` and `postfwd2` versions `1.XX` (eg. `1.39`) and higher minor versions.
 - Releases `v1.30` and higher are compatible only with `postfwd3` versions `2.XX`.
@@ -32,7 +32,7 @@ If you are interested in how your users got their mail accounts hacked, check ou
 
 ## Running with Docker
 
-Prebuilt ready-to-use Docker image is located on DockerHub and can be simply pulled by command:
+Pre-built ready-to-use Docker image is located on DockerHub and can be simply pulled by command:
 
 ```bash
 # Postfwd3 tags
@@ -152,7 +152,7 @@ id=BAN_BOTNET_IP ;
 
 Update configuration file `/etc/postfix/anti-spam.conf` with your credentials to selected database backend (tested with MySQL/PostgreSQL). Don't forget to use proper driver and port.
 
-In case you use different path as `/etc/postfix/anti-spam.conf` and `/etc/postfix/anti-spam-sql-st.conf` to main configuration file, export environment variables `POSTFWD_ANTISPAM_MAIN_CONFIG_PATH` and `POSTFWD_ANTISPAM_SQL_STATEMENTS_CONFIG_PATH` with your custom path.
+In case you use different path such as `/etc/postfix/anti-spam.conf` and `/etc/postfix/anti-spam-sql-st.conf` to main configuration file, export environment variables `POSTFWD_ANTISPAM_MAIN_CONFIG_PATH` and `POSTFWD_ANTISPAM_SQL_STATEMENTS_CONFIG_PATH` with your custom path.
 
 ```conf
 [database]
@@ -209,7 +209,6 @@ ip_limit = 20
 ```
 
 If you use `logrotate` to rotate anti-spam logs, use option `copytruncate` which prevents [logging errors](https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/issues/6) when log file is rotated.
-
 
 ## Useful database queries
 
