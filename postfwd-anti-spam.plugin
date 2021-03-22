@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 # Declare version
-our $VERSION = 1.30;
+our $VERSION = 1.40;
 
 # English module for Perl::Critic compliance
 use English qw( -no_match_vars );
