@@ -151,7 +151,7 @@ Update configuration file `/etc/postfix/anti-spam.conf` with your credentials to
 
 In case you use different path such as `/etc/postfix/anti-spam.conf` and `/etc/postfix/anti-spam-sql-st.conf` to main configuration file, export environment variables `POSTFWD_ANTISPAM_MAIN_CONFIG_PATH` and `POSTFWD_ANTISPAM_SQL_STATEMENTS_CONFIG_PATH` with your custom path.
 
-```conf
+```ini
 [database]
 # driver = Pg
 driver = mysql
@@ -171,7 +171,7 @@ Plugin looks by default for GeoIP database file in path `/usr/local/share/GeoIP/
 
 You can whitelist set of IP addresses or subnets in CIDR format by using configuration setting `app.ip_whitelist`. Whitelisting means, that if client logs into email account from IP address, which IS in whitelist, it will NOT increment login count for this pair of `sasl_username|client_address`.
 
-```conf
+```ini
 [app]
 # flush database records with last login older than 1 day
 db_flush_interval = 86400
@@ -188,7 +188,7 @@ Plugin is by default logging into standard output. This can be changed in config
 
 You can disable logging completely by updating value of statement `debugging.debug` to `0`.
 
-```conf
+```ini
 [logging]
 # remove statement `logfile`, or set it to empty `logfile = ` to log into STDOUT
 logfile = /var/log/postfwd_plugin.log
