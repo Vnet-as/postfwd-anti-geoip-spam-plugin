@@ -36,7 +36,6 @@ Pre-built ready-to-use Docker image is located on DockerHub and can be simply pu
 
 ```bash
 # Postfwd3 tags
-docker pull lirt/postfwd-anti-geoip-spam-plugin:latest
 docker pull lirt/postfwd-anti-geoip-spam-plugin:v1.40
 # Postfwd1, Postfwd2 tags
 docker pull lirt/postfwd-anti-geoip-spam-plugin:v1.21
@@ -48,7 +47,7 @@ To run postfwd with geoip-plugin, run docker with configuration files mounted as
 docker run \
     -v </absolute/path/to/anti-spam.conf>:/etc/postfwd/anti-spam.conf \
     -v </absolute/path/to/postfwd.cf>:/etc/postfwd/postfwd.cf \
-    lirt/postfwd-anti-geoip-spam-plugin:latest
+    lirt/postfwd-anti-geoip-spam-plugin:v1.40
 ```
 
 This will run `postfwd2` or `postfwd3` (based on docker tag) with default arguments, reading postfwd rules file from your mounted volume file `postfwd.cf` and using anti-spam configuration from your file `anti-spam.conf`.
