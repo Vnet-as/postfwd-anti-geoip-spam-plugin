@@ -147,7 +147,7 @@ id=BAN_BOTNET_IP ;
 
 ### Database backend configuration
 
-Update configuration file `/etc/postfix/anti-spam.conf` with your credentials to selected database backend (tested with MySQL/PostgreSQL). Don't forget to use proper driver and port.
+Update configuration file `/etc/postfix/anti-spam.conf` with your credentials to selected database backend. Don't forget to use proper driver and port.
 
 In case you use different path such as `/etc/postfix/anti-spam.conf` and `/etc/postfix/anti-spam-sql-st.conf` to main configuration file, export environment variables `POSTFWD_ANTISPAM_MAIN_CONFIG_PATH` and `POSTFWD_ANTISPAM_SQL_STATEMENTS_CONFIG_PATH` with your custom path.
 
