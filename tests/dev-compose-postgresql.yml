@@ -1,5 +1,6 @@
 ---
-version: "3.3"
+version: "3.8"
+
 services:
   postgres-postfwd-db:
     network_mode: host
