@@ -29,7 +29,6 @@ jobs:
   integration-test-postgresql:
     runs-on: ubuntu-latest
     env:
-      RUN_COMPOSE: "0"
       DATABASES: "postgresql"
     steps:
       - uses: actions/checkout@v2
@@ -48,7 +47,6 @@ jobs:
   integration-test-mysql:
     runs-on: ubuntu-latest
     env:
-      RUN_COMPOSE: "0"
       DATABASES: "mysql"
     steps:
       - uses: actions/checkout@v2
