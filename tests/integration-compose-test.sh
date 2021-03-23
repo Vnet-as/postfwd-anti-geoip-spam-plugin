@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-script_path=$(dirname "${script_path}")
+script_path=$(dirname "${0}")
 
 function send_requests {
   local sasl_username=${1}
