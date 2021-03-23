@@ -1,0 +1,65 @@
+---
+name: docker-compose integration tests
+
+on: [push]
+
+env:
+  RUN_COMPOSE: "0"
+
+jobs:
+  lint:
+    name: "perl v${{ matrix.perl-version }}"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        perl-version: [ '5.32', '5.30', '5.28' ]
+    container:
+      image: perldocker/perl-tester:${{ matrix.perl-version }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        uses: perl-actions/install-with-cpanm@v1
+        with:
+          cpanfile: "cpanfile"
+          sudo: false
+      - name: Lint with perlcritic
+        continue-on-error: true
+        run: perlcritic postfwd-anti-spam.plugin
+
+  integration-test-postgresql:
+    runs-on: ubuntu-latest
+    env:
+      DATABASES: "postgresql"
+    steps:
+      - uses: actions/checkout@v2
+      - name: docker-compose up
+        run: docker-compose -f tests/dev-compose-postgresql.yml
+                            up
+                            --build
+                            -d
+             && sleep 10
+      - name: run integration tests
+        run: ./tests/integration-compose-test.sh
+      - name: read test logs
+        run: docker-compose -f tests/dev-compose-postgresql.yml logs postfwd-geoip-antispam
+      - name: docker-compose down
+        run: docker-compose -f tests/dev-compose-postgresql.yml down
+
+  integration-test-mysql:
+    runs-on: ubuntu-latest
+    env:
+      DATABASES: "mysql"
+    steps:
+      - uses: actions/checkout@v2
+      - name: docker-compose up
+        run: docker-compose -f tests/dev-compose-mysql.yml
+                            up
+                            --build
+                            -d
+             && sleep 10
+      - name: run integration tests
+        run: ./tests/integration-compose-test.sh
+      - name: read test logs
+        run: docker-compose -f tests/dev-compose-mysql.yml logs postfwd-geoip-antispam
+      - name: docker-compose down
+        run: docker-compose -f tests/dev-compose-mysql.yml down

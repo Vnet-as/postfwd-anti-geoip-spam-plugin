@@ -89,6 +89,10 @@ CREATE INDEX postfwd_sasl_username ON postfwd_logins (sasl_username);
 - Perl modules - `Geo::IP`, `DBI`, `Time::Piece`, `Config::Any`, `Net::Subnet`, `DBD::mysql` or `DBD::Pg`.
 - GeoIP database.
 
+#### Cpanm
+
+You can install all dependencies using cpanm with single command `cpanm --installdeps .`
+
 #### Dependencies on RedHat based distributions
 
 Install *GeoIP*, *Time*, *Config*, *DBI* and database modules with following command:
