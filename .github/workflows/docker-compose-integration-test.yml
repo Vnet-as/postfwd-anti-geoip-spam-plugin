@@ -38,7 +38,7 @@ jobs:
                             --build
                             -d
       - name: run integration tests
-        run: ./integration-compose-test.sh
+        run: ./tests/integration-compose-test.sh
       - name: read test logs
         run: docker-compose -f tests/dev-compose-postgresql.yml logs postfwd-geoip-antispam
       - name: docker-compose down
@@ -56,7 +56,7 @@ jobs:
                             --build
                             -d
       - name: run integration tests
-        run: ./integration-compose-test.sh
+        run: ./tests/integration-compose-test.sh
       - name: read test logs
         run: docker-compose -f tests/dev-compose-mysql.yml logs postfwd-geoip-antispam
       - name: docker-compose down
