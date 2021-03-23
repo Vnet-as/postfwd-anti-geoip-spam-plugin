@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 script_path=$(dirname "${0}")
-set -x
 
 function send_requests {
   local sasl_username=${1}
@@ -9,7 +8,7 @@ function send_requests {
   for client_address in "${client_addresses[@]}"; do
     export SASL_USERNAME=${sasl_username}
     export CLIENT_ADDRESS=${client_address}
-    nc localhost 10040 -v -w 10 < <(envsubst < "${script_path}/dev-request") > /dev/null
+    nc 127.0.0.1 10040 -v -w 10 < <(envsubst < "${script_path}/dev-request") > /dev/null
   done
 }
 
