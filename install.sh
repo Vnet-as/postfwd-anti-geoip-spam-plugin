@@ -5,11 +5,11 @@ set -o pipefail
 set -u
 
 cp postfwd-anti-spam.plugin /etc/postfix/
-cp anti-spam-sql-st.conf /etc/postfix/
+cp conf/anti-spam-sql-st.conf /etc/postfix/
 
 if [[ ! -e /etc/postfix/anti-spam.conf ]]; then
     # If main configuration file exists do not overwrite it
-    cp anti-spam.conf /etc/postfix/
+    cp conf/anti-spam.conf /etc/postfix/
 else
     echo "Not copying default configuration. Anti spam configuration already exists."
 fi

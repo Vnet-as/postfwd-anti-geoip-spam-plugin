@@ -47,7 +47,7 @@ COPY docker/docker-entrypoint.sh /usr/local/bin/
 RUN chmod 750 /usr/local/bin/docker-entrypoint.sh
 
 # Install plugin
-COPY --chown=postfw:postfw anti-spam-sql-st.conf /etc/postfwd/anti-spam-sql-st.conf
+COPY --chown=postfw:postfw conf/anti-spam-sql-st.conf /etc/postfwd/anti-spam-sql-st.conf
 COPY --chown=postfw:postfw postfwd-anti-spam.plugin /etc/postfwd/postfwd-anti-spam.plugin
 RUN chmod 644 \
         /etc/postfwd/postfwd-anti-spam.plugin \
