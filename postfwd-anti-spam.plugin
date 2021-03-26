@@ -96,6 +96,8 @@ else {
     mylog_info("Logging destination is file '$config{logging}{logfile}'");
 }
 
+mylog_info("Configuration file $cfg_anti_spam_path was loaded successfully");
+
 # IP WHITELIST
 # Do not whitelist any IP addresses by default
 my $ip_whitelist = subnet_matcher qw(
@@ -132,13 +134,95 @@ if ( $config{app}{ip_whitelist_path} || length $config{app}{ip_whitelist_path} )
 }
 
 
-# Geo IP
+# GeoIP:
+# Load GeoIP modules
 use Geo::IP;
-my $gi = Geo::IP->open($config{app}{geoip_db_path}, GEOIP_MEMORY_CACHE | GEOIP_CHECK_CACHE);
+use GeoIP2::Database::Reader;
 
-# Print info about GeoIP database
-mylog_info('GeoIP Database Informations: ', $gi->database_info);
-mylog_info('GeoIP Database Edition: ', $gi->database_edition);
+# Try to find out version of GeoIP DB
+my $gi;
+
+sub get_geoip_version {
+    mylog_info("Trying to get version of GeoIP Database from file $config{app}{geoip_db_path}");
+
+    # GeoIP Version 1 check
+    my $gi_v1 = Geo::IP->open($config{app}{geoip_db_path}, GEOIP_MEMORY_CACHE | GEOIP_CHECK_CACHE);
+
+    if ( !length($gi_v1->database_info) || !($gi_v1->database_info)) {
+        mylog_info('Failed to get info about GeoIP database (v1 decoder), perhaps it is version 2')
+    } else {
+        $gi = $gi_v1;
+        mylog_info('GeoIP Database Informations: ', $gi->database_info);
+        mylog_info('GeoIP Database Edition: ', $gi->database_edition);
+        return 1
+    }
+
+    # GeoIP Version 2 check
+    my $gi_v2 = GeoIP2::Database::Reader->new(
+        file    => $config{app}{geoip_db_path},
+        locales => [ 'en' ]
+    );
+
+    my $gi_v2_metadata = eval { $gi_v2->metadata() };
+    if ( $EVAL_ERROR ) {
+        mylog_info('Failed to get info about GeoIP database (v2 decoder)');
+    } else {
+        $gi = $gi_v2;
+        mylog_info("[GeoIP2] Description: $gi_v2_metadata->description()->{en}");
+        mylog_info("[GeoIP2] Database Edition: $gi_v2_metadata->binary_format_major_version().$gi_v2_metadata->binary_format_minor_version()");
+        mylog_info("[GeoIP2] Database Type: $gi_v2_metadata->database_type()");
+        mylog_info("[GeoIP2] Build: $gi_v2_metadata->build_epoch()");
+        mylog_info("[GeoIP2] IP Version: $gi_v2_metadata->ip_version()");
+        return 2
+    }
+
+    return
+}
+
+my $geoip_db_version = get_geoip_version();
+if ( !$geoip_db_version ) {
+    mylog_fatal("Cannot load or decode GeoIP database $config{app}{geoip_db_path}");
+}
+mylog_info("GeoIP database $config{app}{geoip_db_path} with version $geoip_db_version was loaded successfully");
+
+sub geoip_country_code {
+    my ($client_ip) = @_;
+    my $cc;
+
+    if ($geoip_db_version == 1) {
+        $cc = $gi->country_code_by_addr($client_ip);
+        if ( !defined $cc ) {
+            mylog_info("Cannot find country code for IP address [$client_ip]");
+            return;
+        }
+        else {
+            if ( !length $cc || !($cc) ) {
+                mylog_info("Country code for IP address [$client_ip] is empty");
+                return;
+            }
+        }
+        return $cc;
+    }
+
+    if ($geoip_db_version == 2) {
+        my $country = eval { $gi->country( ip => $client_ip ) };
+        if ( $EVAL_ERROR ) {
+            if ($EVAL_ERROR =~ m/No record found for IP addresds/ims ) {
+                mylog_info("Cannot find country code for IP address [$client_ip]");
+                return;
+            }
+        }
+        my $country_rec = $country->country();
+
+        $cc = eval { $country_rec->iso_code() };
+        if ( $EVAL_ERROR ) {
+            mylog_info("Country code for IP address [$client_ip] is empty");
+            return;
+        }
+        return $cc;
+    }
+}
+
 
 # DB connection
 # Update values to your DB connection in config file /etc/postfix/anti-spam.conf
@@ -240,16 +324,9 @@ my $last_cache_flush = time;
         }
 
         # Get country code from GeoIP module
-        my $cc = $gi->country_code_by_addr($client_ip);
+        my $cc = geoip_country_code($client_ip);
         if ( !defined $cc ) {
-            mylog_info("Cannot find country code for IP address [$client_ip]");
             return $result;
-        }
-        else {
-            if ( !length $cc || !($cc) ) {
-                mylog_info("Country code for IP address [$client_ip] is empty");
-                return $result;
-            }
         }
 
         # Check if user with given IP already has record
@@ -360,7 +437,7 @@ my $last_cache_flush = time;
             return $result;
         }
 
-        # Get number of unique countries from which has user logged in
+        # Get number of unique countries from which has user logged in from
         my $num_countries_logs_sth =
           $dbh->prepare( $config_sql{num_countries_logs_st} )
           or do { mylog_err( $dbh->errstr ); return $result; };
@@ -392,7 +469,7 @@ my $last_cache_flush = time;
             );
         }
 
-    # Returns number of countries from which user logged in to an email via sasl
+        # Returns number of countries from which user logged in to an email via sasl
         return $result;
 
     },
@@ -466,9 +543,7 @@ my $last_cache_flush = time;
 
         # Returns number of IPs from which user logged in to an email via sasl
         return $result;
-
     },
-
 );
 
 1;
