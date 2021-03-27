@@ -10,3 +10,5 @@ requires 'Net::SSLeay';
 requires 'IO::Socket::SSL';
 requires 'IO::Socket::SSL::Utils';
 requires 'LWP::Protocol::https';
+requires 'Class::XSAccessor';
+requires 'MaxMind::DB::Reader::XS';
