@@ -138,10 +138,13 @@ if ( $config{app}{ip_whitelist_path} || length $config{app}{ip_whitelist_path} )
 # Load GeoIP modules
 use Geo::IP;
 use GeoIP2::Database::Reader;
-
-# Try to find out version of GeoIP DB
 my $gi;
 
+if (! -e $config{app}{geoip_db_path}) {
+    mylog_fatal("GeoIP Database file $config{app}{geoip_db_path} doesn't exist");
+}
+
+# Try to find out version of GeoIP DB
 sub get_geoip_version {
     mylog_info("Trying to get version of GeoIP Database from file $config{app}{geoip_db_path}");
 
