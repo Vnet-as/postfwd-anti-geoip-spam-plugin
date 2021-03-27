@@ -88,8 +88,7 @@ if (   !$config{logging}{logfile}
     }
     $log_file_fh = *STDOUT;
     mylog_info('Logging destination is STDOUT');
-}
-else {
+} else {
     open $log_file_fh, '>>', $config{logging}{logfile}
       or die "ERROR: Could not open file '$config{logging}{logfile}' $ERRNO\n";
     $log_file_fh->autoflush;
@@ -197,8 +196,7 @@ sub geoip_country_code {
         if ( !defined $cc ) {
             mylog_info("Cannot find country code for IP address [$client_ip]");
             return;
-        }
-        else {
+        } else {
             if ( !length $cc || !($cc) ) {
                 mylog_info("Country code for IP address [$client_ip] is empty");
                 return;
@@ -249,8 +247,7 @@ for ( 1 .. DB_CONN_RETRIES ) {
 }
 if ( !defined $dbh ) {
     mylog_fatal 'Could not connect to configured database after 3 retries';
-}
-else {
+} else {
     mylog_info('Database connection successful');
 }
 
@@ -349,7 +346,6 @@ my $last_cache_flush = time;
             return $result;
         }
         if ( $row_count == 0 ) {
-
             # Save new user mail into hash if it does not exists
             mylog_info("Inserting $user, $client_ip, $cc");
             my $insert_sth = $dbh->prepare( $config_sql{insert_st} )
@@ -357,8 +353,7 @@ my $last_cache_flush = time;
             $insert_sth->execute( $user, $client_ip, $cc,
                 localtime(time)->strftime('%F %T') )
               or do { mylog_err( $insert_sth->errstr ); return $result; };
-        }
-        else {
+        } else {
             # Increment or initialize login count for user and given IP/country
             mylog_info("Incrementing $user, $client_ip, $cc");
             my $increment_sth = $dbh->prepare( $config_sql{increment_st} )
@@ -400,7 +395,6 @@ my $last_cache_flush = time;
 
         # Return number of logins from country last logged from
         return $result;
-
     },
 
     'client_uniq_country_login_count' => sub {
@@ -440,7 +434,7 @@ my $last_cache_flush = time;
             return $result;
         }
 
-        # Get number of unique countries from which has user logged in from
+        # Get number of unique countries from which has user logged in
         my $num_countries_logs_sth =
           $dbh->prepare( $config_sql{num_countries_logs_st} )
           or do { mylog_err( $dbh->errstr ); return $result; };
@@ -474,7 +468,6 @@ my $last_cache_flush = time;
 
         # Returns number of countries from which user logged in to an email via sasl
         return $result;
-
     },
 
     'client_uniq_ip_login_count' => sub {
