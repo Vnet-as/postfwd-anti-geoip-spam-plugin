@@ -18,12 +18,7 @@ for arg; do
   esac
 done
 
-
 if [ "$1" = "postfwd3" ] && [ -z "$want_help" ]; then
-  if [ ! -f /etc/postfwd/anti-spam.conf ]; then
-    echo >&2 'ERROR: Anti-spam plugin configuration file /etc/postfwd/anti-spam.conf was not found. Perhaps you forgot to mount it using "-v </absolute/path/to/anti-spam.conf>:/etc/postfwd/anti-spam.conf".'
-    exit 1
-  fi
   chmod -R 644 /etc/postfwd/*
   chown -R postfw:postfw /etc/postfwd
 fi

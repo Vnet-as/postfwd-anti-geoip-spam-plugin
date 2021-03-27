@@ -26,48 +26,74 @@ jobs:
         continue-on-error: true
         run: perlcritic postfwd-anti-spam.plugin
 
-  integration-test-postgresql:
-    name: "integration test postgresql (perl v${{matrix.perl-version}})"
+  integration-test-postgresql-geoip1:
+    name: "integration test postgresql + geoip v1 (perl v${{matrix.perl-version}})"
     strategy:
       matrix:
         perl-version: [ '5.32', '5.30', '5.28' ]
     runs-on: ubuntu-latest
     env:
       DATABASES: "postgresql"
+      POSTFWD_ANTISPAM_MAIN_CONFIG_PATH: "/etc/postfwd/02-dev-anti-spam-postgres-geoip1.conf"
     steps:
       - uses: actions/checkout@v2
       - name: docker-compose up
-        run: docker-compose -f tests/dev-compose-postgresql.yml
+        run: docker-compose -f tests/compose-dev-postgresql.yml
                             up
                             --build
                             -d
              && sleep 10
       - name: run integration tests
-        run: ./tests/integration-compose-test.sh
+        run: ./tests/integration-compose-test-geoip1.sh
       - name: read test logs
-        run: docker-compose -f tests/dev-compose-postgresql.yml logs postfwd-geoip-antispam
+        run: docker-compose -f tests/compose-dev-postgresql.yml logs postfwd-geoip-antispam
       - name: docker-compose down
-        run: docker-compose -f tests/dev-compose-postgresql.yml down
+        run: docker-compose -f tests/compose-dev-postgresql.yml down
 
-  integration-test-mysql:
-    name: "integration test mysql (perl v${{matrix.perl-version}})"
+  integration-test-mysql-geoip1:
+    name: "integration test mysql + geoip v1 (perl v${{matrix.perl-version}})"
     strategy:
       matrix:
         perl-version: [ '5.32', '5.30', '5.28' ]
     runs-on: ubuntu-latest
     env:
       DATABASES: "mysql"
+      POSTFWD_ANTISPAM_MAIN_CONFIG_PATH: "/etc/postfwd/01-dev-anti-spam-mysql-geoip1.conf"
     steps:
       - uses: actions/checkout@v2
       - name: docker-compose up
-        run: docker-compose -f tests/dev-compose-mysql.yml
+        run: docker-compose -f tests/compose-dev-mysql.yml
                             up
                             --build
                             -d
              && sleep 10
       - name: run integration tests
-        run: ./tests/integration-compose-test.sh
+        run: ./tests/integration-compose-test-geoip1.sh
       - name: read test logs
-        run: docker-compose -f tests/dev-compose-mysql.yml logs postfwd-geoip-antispam
+        run: docker-compose -f tests/compose-dev-mysql.yml logs postfwd-geoip-antispam
       - name: docker-compose down
-        run: docker-compose -f tests/dev-compose-mysql.yml down
+        run: docker-compose -f tests/compose-dev-mysql.yml down
+
+  integration-test-mysql-geoip2:
+    name: "integration test mysql + geoip v2 (perl v${{matrix.perl-version}})"
+    strategy:
+      matrix:
+        perl-version: [ '5.32', '5.30', '5.28' ]
+    runs-on: ubuntu-latest
+    env:
+      DATABASES: "mysql"
+      POSTFWD_ANTISPAM_MAIN_CONFIG_PATH: "/etc/postfwd/03-dev-anti-spam-mysql-geoip2.conf"
+    steps:
+      - uses: actions/checkout@v2
+      - name: docker-compose up
+        run: docker-compose -f tests/compose-dev-mysql.yml
+                            up
+                            --build
+                            -d
+             && sleep 10
+      - name: run integration tests
+        run: ./tests/integration-compose-test-geoip2.sh
+      - name: read test logs
+        run: docker-compose -f tests/compose-dev-mysql.yml logs postfwd-geoip-antispam
+      - name: docker-compose down
+        run: docker-compose -f tests/compose-dev-mysql.yml down

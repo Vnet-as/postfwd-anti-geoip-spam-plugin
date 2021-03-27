@@ -29,11 +29,13 @@ If you are interested in how your users got their mail accounts hacked, check ou
 
 | Plugin Version | Postfwd Version          |
 | :------------- | :----------------------- |
+| v1.50.0        | postfwd3 v2.xx           |
 | v1.40          | postfwd3 v2.xx           |
 | v1.30          | postfwd3 v2.xx           |
 | v1.21          | postfwd1, postfwd2 v1.xx |
 
-Supported database backends are **MySQL** and **PostgreSQL**.
+- Supported database backends are **MySQL** and **PostgreSQL**.
+- Supported GeoIP databases are both versions 1 and 2.
 
 To list changed between versions check release notes or look into the [Changelog](CHANGELOG.md).
 
@@ -43,7 +45,7 @@ Pre-built ready-to-use Docker image is located on DockerHub and can be simply pu
 
 ```bash
 # postfwd3 tags
-docker pull lirt/postfwd-anti-geoip-spam-plugin:v1.40
+docker pull lirt/postfwd-anti-geoip-spam-plugin:v1.50.0
 # postfwd1, postfwd2 tags
 docker pull lirt/postfwd-anti-geoip-spam-plugin:v1.21
 ```
@@ -54,7 +56,7 @@ To run postfwd with geoip-plugin, run docker with configuration files mounted as
 docker run \
     -v </absolute/path/to/anti-spam.conf>:/etc/postfwd/anti-spam.conf \
     -v </absolute/path/to/postfwd.cf>:/etc/postfwd/postfwd.cf \
-    lirt/postfwd-anti-geoip-spam-plugin:v1.40
+    lirt/postfwd-anti-geoip-spam-plugin:v1.50.0
 ```
 
 This will run `postfwd2` or `postfwd3` (based on docker tag) with default arguments, reading postfwd rules file from your mounted volume file `postfwd.cf` and using anti-spam configuration from your file `anti-spam.conf`.
@@ -87,7 +89,7 @@ CREATE INDEX postfwd_sasl_username ON postfwd_logins (sasl_username);
 - `Postfwd2` or `Postfwd3`.
 - Database (`MySQL` or `PostgreSQL`).
 - Perl modules - `Geo::IP`, `DBI`, `Time::Piece`, `Config::Any`, `Net::Subnet`, `DBD::mysql` or `DBD::Pg`.
-- GeoIP database.
+- GeoIP database (version 1 or 2).
 
 #### Cpanm
 
@@ -104,7 +106,13 @@ yum install -y 'perl(Geo::IP)' \
                'perl(DBI)' \
                'perl(DBD::mysql)' \
                'perl(DBD::Pg)' \
-               'perl(Net::Subnet)'
+               'perl(Net::Subnet)' \
+               'perl(GeoIP2::Database::Reader)' \
+               'perl(Net::SSLeay)' \
+               'perl(IO::Socket::SSL)' \
+               'perl(LWP::Protocol::https)' \
+               'perl(Class::XSAccessor)' \
+               'perl(MaxMind::DB::Reader::XS)'
 ```
 
 #### Dependencies on Debian based distributions
@@ -119,7 +127,13 @@ apt-get install -y libgeo-ip-perl \
                    libdbd-mysql-perl \
                    libdbd-pg-perl \
                    libnet-subnet-perl \
-                   geoip-database
+                   geoip-database \
+                   libnet-ssleay-perl \
+                   libio-socket-ssl-perl \
+                   liblwp-protocol-https-perl \
+                   libclass-xsaccessor-perl \
+                   libmaxmind-db-reader-xs-perl \
+                   libgeoip2-perl
 ```
 
 ## Configuration
@@ -218,13 +232,16 @@ Plugin stores interesting statistical information in the database. To query thos
 ### Prototyping with Docker
 
 Complete development environment with postfwd, anti-spam plugin and mysql/postgresql database configured together can be run with single command from directory `tests/`:
-- MySQL: `docker-compose -f dev-compose-mysql.yml up`
-- PostgreSQL: `docker-compose -f dev-compose-postgresql.yml up`
+- MySQL: `docker-compose -f compose-dev-mysql.yml up`
+- PostgreSQL: `docker-compose -f compose-dev-postgresql.yml up`
+- MySQL with GeoIP2: `export POSTFWD_ANTISPAM_MAIN_CONFIG_PATH=/etc/postfwd/03-dev-anti-spam-mysql-geoip2.conf docker-compose -f compose-dev-mysql.yml up`
 
 Note for overriding postfwd arguments:
 
 * Most important arguments to run `postfwd` in Docker are `--stdout` and `--nodaemon`. These arguments configure postfwd to log into standard output and stay in foreground.
 * For running postfwd plugin, you also need to set argument `--plugins <path-to-plugin>` to correct location of plugin.
+
+MaxMind test database `tests/GeoLite2-Country-Test.mmdb` was downloaded from [MaxMind-DB repository](https://github.com/maxmind/MaxMind-DB).
 
 ### Running tests
 
@@ -240,5 +257,5 @@ nc 127.0.0.1 10040 < <(envsubst < dev-request)
 
 # run testing script
 cd tests
-DATABASES="mysql postgresql" RUN_COMPOSE=1 ./integration-compose-test.sh
+DATABASES="mysql postgresql" RUN_COMPOSE=1 ./integration-compose-test-geoip1.sh
 ```

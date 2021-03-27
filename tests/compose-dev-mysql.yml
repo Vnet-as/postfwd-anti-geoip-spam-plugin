@@ -1,0 +1,46 @@
+---
+version: "3.8"
+
+services:
+  mysql-postfwd-db:
+    network_mode: host
+    image: mariadb:latest
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=no
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_USER=testuser
+      - MYSQL_PASSWORD=testpasswordpostfwdantispam
+      - MYSQL_DATABASE=postfwd_antispam_test
+    volumes:
+      - type: bind
+        source: ./dev-create-antispam-db.sql
+        target: /docker-entrypoint-initdb.d/dev-create-antispam-db.sql
+  postfwd-geoip-antispam:
+    network_mode: host
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    environment:
+      - PROG=postfwd3
+      - POSTFWD_ANTISPAM_MAIN_CONFIG_PATH
+    depends_on:
+      - mysql-postfwd-db
+    volumes:
+      - type: bind
+        source: ./01-dev-anti-spam-mysql-geoip1.conf
+        target: /etc/postfwd/01-dev-anti-spam-mysql-geoip1.conf
+      - type: bind
+        source: ./03-dev-anti-spam-mysql-geoip2.conf
+        target: /etc/postfwd/03-dev-anti-spam-mysql-geoip2.conf
+      - type: bind
+        source: ./04-dev-anti-spam-mysql-no-geoip.conf
+        target: /etc/postfwd/04-dev-anti-spam-mysql-no-geoip.conf
+      - type: bind
+        source: ./dev-postfwd.cf
+        target: /etc/postfwd/postfwd.cf
+      - type: bind
+        source: ./ip_whitelist.txt
+        target: /etc/postfwd/ip_whitelist.txt
+      - type: bind
+        source: ./GeoLite2-Country-Test.mmdb
+        target: /usr/local/share/GeoIP/GeoLite2-Country-Test.mmdb
