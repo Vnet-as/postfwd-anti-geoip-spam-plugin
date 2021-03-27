@@ -1,6 +1,6 @@
 FROM postfwd/postfwd:v2.02
 
-LABEL maintainer="Postfwd GeoIp Spam Plugin Maintainer <ondrej.vaskoo@gmail.com>"
+LABEL maintainer="Postfwd GeoIP Spam Plugin Maintainer <ondrej.vaskoo@gmail.com>"
 
 ENV POSTFWD_ANTISPAM_MAIN_CONFIG_PATH=/etc/postfwd/anti-spam.conf
 ENV POSTFWD_ANTISPAM_SQL_STATEMENTS_CONFIG_PATH=/etc/postfwd/anti-spam-sql-st.conf
@@ -18,6 +18,8 @@ RUN    apk --no-cache update \
                           geoip-dev \
                           postgresql-dev \
                           mysql-dev \
+                          openssl \
+                          libmaxminddb-dev \
     && cpan App::cpanminus \
     && cpanm Geo::IP \
              IO::Handle \
@@ -30,6 +32,13 @@ RUN    apk --no-cache update \
              DBD::mysql \
              Net::Subnet \
              Sys::Mmap \
+             Net::SSLeay \
+             IO::Socket::SSL::Utils \
+             IO::Socket::SSL \
+             LWP::Protocol::https \
+             GeoIP2::Database::Reader \
+             Class::XSAccessor \
+             MaxMind::DB::Reader::XS --force \
     && apk del make \
                wget \
                gcc \

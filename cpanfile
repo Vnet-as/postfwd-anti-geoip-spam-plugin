@@ -6,3 +6,7 @@ requires 'DBI';
 requires 'DBD::mysql';
 requires 'DBD::Pg';
 requires 'Net::Subnet';
+requires 'Net::SSLeay';
+requires 'IO::Socket::SSL';
+requires 'IO::Socket::SSL::Utils';
+requires 'LWP::Protocol::https';
