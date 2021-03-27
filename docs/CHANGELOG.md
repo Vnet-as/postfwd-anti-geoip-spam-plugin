@@ -2,7 +2,22 @@
 
 This changelog notes changes between versions of Postfwd GeoIP Anti-Spam plugin.
 
-## Version 1.40 [2. Mar 2020]
+## Version 1.50.0 [27. March 2021]
+
+GeoIP2 Feature.
+
+### Breaking changes
+
+- New dependencies for GeoIP2 module were added, please see changes in `cpanfile`.
+
+### Features / Enhancements
+
+- Added GeoIP2 support. Now you can use Maxmind GeoIP2 databases. Path to GeoIP file can be changed in config `app.geoip_db_path`.
+- Removed entrypoint check for configuration file. The config file path can be overriden using environment variable `POSTFWD_ANTISPAM_MAIN_CONFIG_PATH`.
+- Added integration tests for GeoIP2 (test structure changed overall).
+
+
+## Version 1.40 [2. March 2020]
 
 This stable release contains IP whitelisting feature (Reported as bug and requested by @csazku in https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/issues/50).
 
@@ -53,7 +68,7 @@ and does integration test with sample requests and verification through logs.
 Plugin item now exports `request{client_uniq_ip_login_count}`
 and `request{client_uniq_country_login_count}` instead of `result*`.
 
-## Version 1.2 [11. Mar 2019]
+## Version 1.2 [11. March 2019]
 
 This stable release has changes mainly in linting, readability and testability, but also
 contains several bugfixes.
@@ -80,7 +95,7 @@ Docker base image was updated from 1.37 to 1.39.
 - Script `lint.pl` was removed and replaced by more general/portable file
 `.perlcriticrc`.
 
-## Version 1.1 [5. Jan 2019]
+## Version 1.1 [5. January 2019]
 
 This stable version introduces docker image based on official postfwd docker image
 and other minor changes. All work done by @Lirt (ondrej.vaskoo@gmail.com),
@@ -123,7 +138,7 @@ postfwd logs and this postfwd plugin logs.
 
 ### Removed
 
-## Version 1.0 [12. Nov 2018]
+## Version 1.0 [12. November 2018]
 
 This is first official version and release.
 
