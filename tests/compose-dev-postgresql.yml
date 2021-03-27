@@ -2,15 +2,13 @@
 version: "3.8"
 
 services:
-  mysql-postfwd-db:
+  postgres-postfwd-db:
     network_mode: host
-    image: mariadb:latest
+    image: postgres:latest
     environment:
-      - MYSQL_ALLOW_EMPTY_PASSWORD=no
-      - MYSQL_RANDOM_ROOT_PASSWORD=yes
-      - MYSQL_USER=testuser
-      - MYSQL_PASSWORD=testpasswordpostfwdantispam
-      - MYSQL_DATABASE=postfwd_antispam_test
+      - POSTGRES_USER=testuser
+      - POSTGRES_PASSWORD=testpasswordpostfwdantispam
+      - POSTGRES_DB=postfwd_antispam_test
     volumes:
       - type: bind
         source: ./dev-create-antispam-db.sql
@@ -23,10 +21,10 @@ services:
     environment:
       - PROG=postfwd3
     depends_on:
-      - mysql-postfwd-db
+      - postgres-postfwd-db
     volumes:
       - type: bind
-        source: ./dev-anti-spam-mysql.conf
+        source: ./dev-anti-spam-postgres.conf
         target: /etc/postfwd/anti-spam.conf
       - type: bind
         source: ./dev-postfwd.cf
@@ -34,3 +32,6 @@ services:
       - type: bind
         source: ./ip_whitelist.txt
         target: /etc/postfwd/ip_whitelist.txt
+      - type: bind
+        source: ./GeoLite2-Country-Test.mmdb
+        target: /usr/local/share/GeoIP/GeoLite2-Country-Test.mmdb

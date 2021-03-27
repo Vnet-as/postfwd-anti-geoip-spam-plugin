@@ -17,7 +17,7 @@ sleep_duration=10
 for DB in ${DATABASES}; do
   # Build and run compose
   if [ "${RUN_COMPOSE}" = "1" ]; then
-    docker-compose -f "${script_path}/dev-compose-${DB}.yml" up -d --build > /dev/null
+    docker-compose -f "${script_path}/compose-dev-${DB}.yml" up -d --build > /dev/null
     echo "Sleeping ${sleep_duration} seconds until compose initializes"
     sleep ${sleep_duration}
     echo "Sleep done"
@@ -70,19 +70,19 @@ for DB in ${DATABASES}; do
   #   2. Check if spam-user exceeded country limit
   #   3. Check if spam-user exceeded IP address limit
   declare -a errors
-  if docker-compose -f "${script_path}/dev-compose-${DB}.yml" logs postfwd-geoip-antispam \
+  if docker-compose -f "${script_path}/compose-dev-${DB}.yml" logs postfwd-geoip-antispam \
      | grep -i "error\|fatal" \
      | grep -E -v -e "ERROR.*: Retry [123]/3 - Can't connect to MySQL server on" \
                   -e "ERROR.*: Retry [123]/3 - could not connect to server: Connection refused"; then
     echo -e 'ERROR: Errors found in log.\nTEST FAILED!'
     errors+=("1")
   fi
-  if ! docker-compose -f "${script_path}/dev-compose-${DB}.yml" logs postfwd-geoip-antispam \
+  if ! docker-compose -f "${script_path}/compose-dev-${DB}.yml" logs postfwd-geoip-antispam \
        | grep "User spam-user1@example.com was logged from more than 5 countries([67])"; then
     echo -e 'ERROR: User did not exceed country login limit (5) but should!'
     errors+=("2")
   fi
-  if ! docker-compose -f "${script_path}/dev-compose-${DB}.yml" logs postfwd-geoip-antispam \
+  if ! docker-compose -f "${script_path}/compose-dev-${DB}.yml" logs postfwd-geoip-antispam \
        | grep "User spam-user2@example.com was logged from more than 20 IP addresses(2[45])"; then
     echo -e 'ERROR: User did not exceed IP address limit (20) but should!'
     errors+=("3")
@@ -90,7 +90,7 @@ for DB in ${DATABASES}; do
 
   # Cleanup
   if [ "${RUN_COMPOSE}" = "1" ]; then
-    docker-compose -f "${script_path}/dev-compose-${DB}.yml" down > /dev/null
+    docker-compose -f "${script_path}/compose-dev-${DB}.yml" down > /dev/null
   fi
 done
 
