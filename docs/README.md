@@ -104,7 +104,13 @@ yum install -y 'perl(Geo::IP)' \
                'perl(DBI)' \
                'perl(DBD::mysql)' \
                'perl(DBD::Pg)' \
-               'perl(Net::Subnet)'
+               'perl(Net::Subnet)' \
+               'perl(GeoIP2::Database::Reader)' \
+               'perl(Net::SSLeay)' \
+               'perl(IO::Socket::SSL)' \
+               'perl(LWP::Protocol::https)' \
+               'perl(Class::XSAccessor)' \
+               'perl(MaxMind::DB::Reader::XS)'
 ```
 
 #### Dependencies on Debian based distributions
@@ -119,7 +125,13 @@ apt-get install -y libgeo-ip-perl \
                    libdbd-mysql-perl \
                    libdbd-pg-perl \
                    libnet-subnet-perl \
-                   geoip-database
+                   geoip-database \
+                   libnet-ssleay-perl \
+                   libio-socket-ssl-perl \
+                   liblwp-protocol-https-perl \
+                   libclass-xsaccessor-perl \
+                   libmaxmind-db-reader-xs-perl \
+                   libgeoip2-perl
 ```
 
 ## Configuration
