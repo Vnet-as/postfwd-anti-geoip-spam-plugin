@@ -1,6 +1,7 @@
 # Supported tags and respective `Dockerfile` links
 
 * [`latest` (Dockerfile)](https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/blob/master/docker/Dockerfile)
+* [`v1.50.0` (Dockerfile)](https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/blob/v1.50.0/docker/Dockerfile)
 * [`v1.40` (Dockerfile)](https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/blob/v1.40/docker/Dockerfile)
 * [`v1.30` (Dockerfile)](https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/blob/v1.30/docker/Dockerfile)
 * [`v1.21` (Dockerfile)](https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/blob/v1.21/docker/Dockerfile)
@@ -19,7 +20,6 @@ Pull image with `docker pull lirt/postfwd-anti-geoip-spam-plugin:latest`.
 
 Prepare your configuration files and run this docker image with following command:
 
-
 ```bash
 docker run -d \
     -v </absolute/path/to/anti-spam.conf>:/etc/postfwd/anti-spam.conf \
@@ -32,7 +32,7 @@ docker run -d \
 
 If you don't have database by your hand, but **want to try the plugin**, you can try it with `docker-compose` template located in [official GitHub repository](https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/tree/master/tests) in directory `./tests`.
 
-Run it with `docker-compose -f dev-compose.yml up` - this will bootstrap ready-to-work environment, where you can try the plugin.
+Run it with `docker-compose -f compose-dev-mysql.yml up` - this will bootstrap ready-to-work environment, where you can try the plugin.
 
 Then you can run from local shell `nc 127.0.0.1 10040 < <(./dev-request.sh <IP_ADDRESS>)`, to send artificial request into postfwd and watch logs what is happening.
 
