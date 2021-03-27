@@ -226,6 +226,8 @@ Note for overriding postfwd arguments:
 * Most important arguments to run `postfwd` in Docker are `--stdout` and `--nodaemon`. These arguments configure postfwd to log into standard output and stay in foreground.
 * For running postfwd plugin, you also need to set argument `--plugins <path-to-plugin>` to correct location of plugin.
 
+MaxMind test database `tests/GeoLite2-Country-Test.mmdb` was downloaded from [MaxMind-DB repository](https://github.com/maxmind/MaxMind-DB).
+
 ### Running tests
 
 Check for proper linting with `perlcritic postfwd-anti-spam.plugin`.
