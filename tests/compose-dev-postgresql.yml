@@ -20,12 +20,13 @@ services:
       dockerfile: docker/Dockerfile
     environment:
       - PROG=postfwd3
+      - POSTFWD_ANTISPAM_MAIN_CONFIG_PATH
     depends_on:
       - postgres-postfwd-db
     volumes:
       - type: bind
-        source: ./dev-anti-spam-postgres.conf
-        target: /etc/postfwd/anti-spam.conf
+        source: ./02-dev-anti-spam-postgres-geoip1.conf
+        target: /etc/postfwd/02-dev-anti-spam-postgres-geoip1.conf
       - type: bind
         source: ./dev-postfwd.cf
         target: /etc/postfwd/postfwd.cf
