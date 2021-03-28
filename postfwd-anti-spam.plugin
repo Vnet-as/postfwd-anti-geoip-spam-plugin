@@ -6,6 +6,9 @@ our $VERSION = '1.50.0';
 # English module for Perl::Critic compliance
 use English qw( -no_match_vars );
 
+# For constants
+use Readonly;
+
 # DBI
 use DBI;
 
@@ -34,6 +37,21 @@ use Config::Any::INI;
 my $config_ref = Config::Any::INI->load($cfg_anti_spam_path);
 my %config     = %{$config_ref};
 
+# Set unique IP and Country limit for logging
+my $LOGGING_IP_LIMIT;
+my $LOGGING_COUNTRY_LIMIT;
+
+if ( $config{logging}{ip_limit} ) {
+    Readonly $LOGGING_IP_LIMIT => $config{logging}{ip_limit};
+} else {
+    Readonly $LOGGING_IP_LIMIT => 20;
+}
+if ( $config{logging}{country_limit} ) {
+    Readonly $LOGGING_COUNTRY_LIMIT => $config{logging}{country_limit};
+} else {
+    Readonly $LOGGING_COUNTRY_LIMIT => 5;
+}
+
 # SQL statements config file
 use Config::Any::General;
 my $config_sql_ref = Config::Any::General->load($cfg_sql_statements_path);
@@ -45,7 +63,7 @@ my $log_file_fh;
 
 sub mylog {
     my ( $log_level, @errstr ) = @_;
-    if ( $config{debugging}{debug} ) {
+    if ( $config{logging}{enable} ) {
         my $date      = localtime(time)->strftime('%F %T');
         my $final_str = "$date $program $log_level: ";
 
@@ -77,6 +95,23 @@ sub mylog_fatal {
     mylog( "FATAL[$PID]", @args );
     exit 1;
 }
+
+sub log_uniq_ip_spam {
+    my ($uniq_ip_login_count, $user) = @_;
+    if ($uniq_ip_login_count > $LOGGING_IP_LIMIT ) {
+        mylog_info("User $user was logged from more than $LOGGING_IP_LIMIT IP addresses($uniq_ip_login_count)");
+    }
+    return;
+}
+
+sub log_uniq_country_spam {
+    my ($uniq_country_login_count, $user) = @_;
+    if ($uniq_country_login_count > $LOGGING_COUNTRY_LIMIT ) {
+        mylog_info("User $user was logged from more than $LOGGING_COUNTRY_LIMIT countries($uniq_country_login_count)");
+    }
+    return;
+}
+
 
 if (   !$config{logging}{logfile}
     || !length $config{logging}{logfile}
@@ -171,7 +206,7 @@ sub get_geoip_version {
     } else {
         $gi = $gi_v2;
         mylog_info('[GeoIP2] Description: ', $gi_v2_metadata->description()->{en});
-        mylog_info('[GeoIP2] Database Edition: ', $gi_v2_metadata->binary_format_major_version().$gi_v2_metadata->binary_format_minor_version());
+        mylog_info('[GeoIP2] Database Edition: ', $gi_v2_metadata->binary_format_major_version(), '.', $gi_v2_metadata->binary_format_minor_version());
         mylog_info('[GeoIP2] Database Type: ', $gi_v2_metadata->database_type());
         mylog_info('[GeoIP2] Build: ', $gi_v2_metadata->build_epoch());
         mylog_info('[GeoIP2] IP Version: ', $gi_v2_metadata->ip_version());
@@ -206,10 +241,24 @@ sub geoip_country_code {
     }
 
     if ($geoip_db_version == 2) {
-        my $country = eval { $gi->country( ip => $client_ip ) };
+        my $country = eval {
+            $gi->country( ip => $client_ip );
+        };
         if ( $EVAL_ERROR ) {
-            if ($EVAL_ERROR =~ m/No record found for IP addresds/ims ) {
-                mylog_info("Cannot find country code for IP address [$client_ip]");
+            if ($EVAL_ERROR =~ m/No record found for IP address/ims ) {
+                mylog_info("Cannot find IP address in GeoIP database [$client_ip]");
+                return;
+            }
+            if ($EVAL_ERROR =~ m/The IP address you provided (.*) is not a public IP address/ims ) {
+                mylog_info("IP address is not public [$client_ip]");
+                return;
+            }
+            if ($EVAL_ERROR =~ m/is not a valid IP/ims ) {
+                mylog_info("Invalid IP address [$client_ip]");
+                return;
+            }
+            if ($EVAL_ERROR =~ m/The IP address you provided (.*) is not a valid IPv4/ims ) {
+                mylog_info("Invalid IP address [$client_ip]");
                 return;
             }
         }
@@ -234,16 +283,16 @@ my %attr = ( RaiseError => 0, PrintError => 1, AutoCommit => 1 );
 mylog_info("Starting postfwd plugin with dsn '$dsn'");
 
 # Connect to DB, do 3 retries with 10 second timeout
-use constant DB_CONN_RETRIES => 3;
-use constant DB_CONN_TIMEOUT => 10;
-for ( 1 .. DB_CONN_RETRIES ) {
+Readonly my $DB_CONN_RETRIES => 3;
+Readonly my $DB_CONN_TIMEOUT => 10;
+for ( 1 .. $DB_CONN_RETRIES ) {
     $dbh = DBI->connect(
         $dsn,
         $config{database}{userid},
         $config{database}{password}, \%attr
     ) and last;
     mylog_err( 'Retry ', $_, '/3', ' - ', DBI->errstr );
-    sleep DB_CONN_TIMEOUT;
+    sleep $DB_CONN_TIMEOUT;
 }
 if ( !defined $dbh ) {
     mylog_fatal 'Could not connect to configured database after 3 retries';
@@ -319,7 +368,7 @@ my $last_cache_flush = time;
         # Simple regex test if string looks like IP address
         if ( !( $client_ip =~ m/^\d{1,3}[.]\d{1,3}[.]\d{1,3}[.]\d{1,3}$/msx ) )
         {
-            mylog_info("'$client_ip' is not valid IP address");
+            mylog_info("'$client_ip' is not a valid IP address");
             return $result;
         }
 
@@ -458,13 +507,7 @@ my $last_cache_flush = time;
         mylog_info(
 "Number of unique countries logged in from user [$user]: $result->{client_uniq_country_login_count}"
         );
-        if ( $result->{client_uniq_country_login_count} >
-            $config{debugging}{country_limit} )
-        {
-            mylog_info(
-"User $user was logged from more than $config{debugging}{country_limit} countries($result->{client_uniq_country_login_count})"
-            );
-        }
+        log_uniq_country_spam($result->{client_uniq_country_login_count}, $user);
 
         # Returns number of countries from which user logged in to an email via sasl
         return $result;
@@ -529,13 +572,7 @@ my $last_cache_flush = time;
         mylog_info(
 "Number of unique IPs logged in from user [$user]: $result->{client_uniq_ip_login_count}"
         );
-        if (
-            $result->{client_uniq_ip_login_count} > $config{debugging}{ip_limit} )
-        {
-            mylog_info(
-"User $user was logged from more than $config{debugging}{ip_limit} IP addresses($result->{client_uniq_ip_login_count})"
-            );
-        }
+        log_uniq_ip_spam($result->{client_uniq_ip_login_count}, $user);
 
         # Returns number of IPs from which user logged in to an email via sasl
         return $result;

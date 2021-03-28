@@ -25,6 +25,26 @@ valid_user_addresses=( 2.125.160.216
 send_requests "$sasl_username" "valid_user_addresses"
 
 
+# User logging from IP addresses which are not in DB
+sasl_username="valid-user-non-existing-ip@example.com"
+valid_user_non_existing_ip_addresses=(192.168.35.1
+                                      10.1.1.1
+                                      172.20.20.20
+                                      192.0.2.15
+)
+send_requests "$sasl_username" "valid_user_non_existing_ip_addresses"
+
+
+# User logging from invalid IP addresses
+sasl_username="valid-user-non-existing-ip@example.com"
+valid_user_invalid_ips=(my-special-ip
+                        10123.1.1.1
+                        172.20.20.20:1234
+                        500.0.2.15
+)
+send_requests "$sasl_username" "valid_user_invalid_ips"
+
+
 # Spam user logging in with IP addresses from 7 different countries
 # UK, US, BT, SE, CN, PH, GI
 sasl_username="spam-user1@example.com"
@@ -62,7 +82,10 @@ declare -a errors
 if docker-compose -f "${script_path}/compose-dev-mysql.yml" logs postfwd-geoip-antispam \
    | grep -i "error\|fatal" \
    | grep -E -v -e "ERROR.*: Retry [123]/3 - Can't connect to MySQL server on" \
-                -e "ERROR.*: Retry [123]/3 - could not connect to server: Connection refused"; then
+                -e "ERROR.*: Retry [123]/3 - could not connect to server: Connection refused" \
+   | grep -E -v -e "\[postfwd3/policy\]\[[[:digit:]]+\]\[LOG crit\]: FATAL: The IP address you provided.*is not a valid IPv4 or IPv6 address" \
+                -e "\[postfwd3/policy\]\[[[:digit:]]+\]\[LOG crit\]: FATAL: The IP address you provided.*is not a public IP address" \
+                -e "\[postfwd3/policy\]\[[[:digit:]]+\]\[LOG crit\]: FATAL: No record found for IP address"; then
   echo -e 'ERROR: Errors found in log.\nTEST FAILED!'
   errors+=("1")
 fi
