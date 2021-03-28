@@ -82,7 +82,10 @@ declare -a errors
 if docker-compose -f "${script_path}/compose-dev-mysql.yml" logs postfwd-geoip-antispam \
    | grep -i "error\|fatal" \
    | grep -E -v -e "ERROR.*: Retry [123]/3 - Can't connect to MySQL server on" \
-                -e "ERROR.*: Retry [123]/3 - could not connect to server: Connection refused"; then
+                -e "ERROR.*: Retry [123]/3 - could not connect to server: Connection refused" \
+   | grep -E -v -e "\[postfwd3/policy\]\[[[:digit:]]+\]\[LOG crit\]: FATAL: The IP address you provided.*is not a valid IPv4 or IPv6 address" \
+                -e "\[postfwd3/policy\]\[[[:digit:]]+\]\[LOG crit\]: FATAL: The IP address you provided.*is not a public IP address" \
+                -e "\[postfwd3/policy\]\[[[:digit:]]+\]\[LOG crit\]: FATAL: No record found for IP address"; then
   echo -e 'ERROR: Errors found in log.\nTEST FAILED!'
   errors+=("1")
 fi
