@@ -111,7 +111,8 @@ yum install -y 'perl(Geo::IP)' \
                'perl(IO::Socket::SSL)' \
                'perl(LWP::Protocol::https)' \
                'perl(Class::XSAccessor)' \
-               'perl(MaxMind::DB::Reader::XS)'
+               'perl(MaxMind::DB::Reader::XS)' \
+               'perl(Readonly)'
 ```
 
 #### Dependencies on Debian based distributions
@@ -132,7 +133,8 @@ apt-get install -y libgeo-ip-perl \
                    liblwp-protocol-https-perl \
                    libclass-xsaccessor-perl \
                    libmaxmind-db-reader-xs-perl \
-                   libgeoip2-perl
+                   libgeoip2-perl \
+                   libreadonly-perl
 ```
 
 ## Configuration

@@ -27,6 +27,7 @@ RUN    apk --no-cache update \
              Config::Tiny \
              Config::Any::INI \
              Config::Any::General \
+             Readonly \
              DBI \
              DBD::Pg \
              DBD::mysql \
