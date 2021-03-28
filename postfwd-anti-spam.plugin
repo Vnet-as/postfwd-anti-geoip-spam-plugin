@@ -35,7 +35,7 @@ my $config_ref = Config::Any::INI->load($cfg_anti_spam_path);
 my %config     = %{$config_ref};
 
 # Set unique IP and Country limit for logging
-my $logging_ip_limit = 25;
+my $logging_ip_limit = 20;
 my $logging_country_limit = 5;
 
 if ( $config{debugging}{ip_limit} ) {
