@@ -97,17 +97,19 @@ sub mylog_fatal {
 }
 
 sub log_uniq_ip_spam {
-    my ($uniq_ip_login_count, $user) = (@_);
+    my ($uniq_ip_login_count, $user) = @_;
     if ($uniq_ip_login_count > $logging_ip_limit ) {
         mylog_info("User $user was logged from more than $logging_ip_limit IP addresses($uniq_ip_login_count)");
     }
+    return;
 }
 
 sub log_uniq_country_spam {
-    my ($uniq_country_login_count, $user) = (@_);
+    my ($uniq_country_login_count, $user) = @_;
     if ($uniq_country_login_count > $logging_country_limit ) {
         mylog_info("User $user was logged from more than $logging_country_limit countries($uniq_country_login_count)");
     }
+    return;
 }
 
 
