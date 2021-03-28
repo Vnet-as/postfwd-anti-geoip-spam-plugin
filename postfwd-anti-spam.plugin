@@ -493,7 +493,7 @@ my $last_cache_flush = time;
         mylog_info(
 "Number of unique countries logged in from user [$user]: $result->{client_uniq_country_login_count}"
         );
-        log_uniq_country_spam($results->{client_uniq_country_login_count}, $user);
+        log_uniq_country_spam($result->{client_uniq_country_login_count}, $user);
 
         # Returns number of countries from which user logged in to an email via sasl
         return $result;
@@ -558,7 +558,7 @@ my $last_cache_flush = time;
         mylog_info(
 "Number of unique IPs logged in from user [$user]: $result->{client_uniq_ip_login_count}"
         );
-        log_uniq_ip_spam($results->{client_uniq_ip_login_count}, $user);
+        log_uniq_ip_spam($result->{client_uniq_ip_login_count}, $user);
 
         # Returns number of IPs from which user logged in to an email via sasl
         return $result;
