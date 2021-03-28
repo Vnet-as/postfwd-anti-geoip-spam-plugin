@@ -206,7 +206,7 @@ sub get_geoip_version {
     } else {
         $gi = $gi_v2;
         mylog_info('[GeoIP2] Description: ', $gi_v2_metadata->description()->{en});
-        mylog_info('[GeoIP2] Database Edition: ', $gi_v2_metadata->binary_format_major_version().$gi_v2_metadata->binary_format_minor_version());
+        mylog_info('[GeoIP2] Database Edition: ', $gi_v2_metadata->binary_format_major_version(), '.', $gi_v2_metadata->binary_format_minor_version());
         mylog_info('[GeoIP2] Database Type: ', $gi_v2_metadata->database_type());
         mylog_info('[GeoIP2] Build: ', $gi_v2_metadata->build_epoch());
         mylog_info('[GeoIP2] IP Version: ', $gi_v2_metadata->ip_version());
