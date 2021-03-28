@@ -34,6 +34,17 @@ use Config::Any::INI;
 my $config_ref = Config::Any::INI->load($cfg_anti_spam_path);
 my %config     = %{$config_ref};
 
+# Set unique IP and Country limit for logging
+my $logging_ip_limit = 25;
+my $logging_country_limit = 5;
+
+if ( $config{debugging}{ip_limit} ) {
+    $logging_ip_limit = $config{debugging}{ip_limit};
+}
+if ( $config{debugging}{country_limit} ) {
+    $logging_country_limit = $config{debugging}{country_limit};
+}
+
 # SQL statements config file
 use Config::Any::General;
 my $config_sql_ref = Config::Any::General->load($cfg_sql_statements_path);
@@ -77,6 +88,21 @@ sub mylog_fatal {
     mylog( "FATAL[$PID]", @args );
     exit 1;
 }
+
+sub log_uniq_ip_spam {
+    my ($uniq_ip_login_count, $user) = (@_);
+    if ($uniq_ip_login_count > $logging_ip_limit ) {
+        mylog_info("User $user was logged from more than $logging_ip_limit IP addresses($uniq_ip_login_count)");
+    }
+}
+
+sub log_uniq_country_spam {
+    my ($uniq_country_login_count, $user) = (@_);
+    if ($uniq_country_login_count > $logging_country_limit ) {
+        mylog_info("User $user was logged from more than $logging_country_limit countries($uniq_country_login_count)");
+    }
+}
+
 
 if (   !$config{logging}{logfile}
     || !length $config{logging}{logfile}
@@ -458,13 +484,7 @@ my $last_cache_flush = time;
         mylog_info(
 "Number of unique countries logged in from user [$user]: $result->{client_uniq_country_login_count}"
         );
-        if ( $result->{client_uniq_country_login_count} >
-            $config{debugging}{country_limit} )
-        {
-            mylog_info(
-"User $user was logged from more than $config{debugging}{country_limit} countries($result->{client_uniq_country_login_count})"
-            );
-        }
+        log_uniq_country_spam($results->{client_uniq_country_login_count}, $user);
 
         # Returns number of countries from which user logged in to an email via sasl
         return $result;
@@ -529,13 +549,7 @@ my $last_cache_flush = time;
         mylog_info(
 "Number of unique IPs logged in from user [$user]: $result->{client_uniq_ip_login_count}"
         );
-        if (
-            $result->{client_uniq_ip_login_count} > $config{debugging}{ip_limit} )
-        {
-            mylog_info(
-"User $user was logged from more than $config{debugging}{ip_limit} IP addresses($result->{client_uniq_ip_login_count})"
-            );
-        }
+        log_uniq_ip_spam($results->{client_uniq_ip_login_count}, $user);
 
         # Returns number of IPs from which user logged in to an email via sasl
         return $result;
