@@ -241,10 +241,24 @@ sub geoip_country_code {
     }
 
     if ($geoip_db_version == 2) {
-        my $country = eval { $gi->country( ip => $client_ip ) };
+        my $country = eval {
+            $gi->country( ip => $client_ip );
+        };
         if ( $EVAL_ERROR ) {
-            if ($EVAL_ERROR =~ m/No record found for IP addresds/ims ) {
-                mylog_info("Cannot find country code for IP address [$client_ip]");
+            if ($EVAL_ERROR =~ m/No record found for IP address/ims ) {
+                mylog_info("Cannot find IP address in GeoIP database [$client_ip]");
+                return;
+            }
+            if ($EVAL_ERROR =~ m/The IP address you provided (.*) is not a public IP address/ims ) {
+                mylog_info("IP address is not public [$client_ip]");
+                return;
+            }
+            if ($EVAL_ERROR =~ m/is not a valid IP/ims ) {
+                mylog_info("Invalid IP address [$client_ip]");
+                return;
+            }
+            if ($EVAL_ERROR =~ m/The IP address you provided (.*) is not a valid IPv4/ims ) {
+                mylog_info("Invalid IP address [$client_ip]");
                 return;
             }
         }
