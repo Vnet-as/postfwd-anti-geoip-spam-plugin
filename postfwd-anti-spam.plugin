@@ -38,11 +38,11 @@ my %config     = %{$config_ref};
 my $logging_ip_limit = 20;
 my $logging_country_limit = 5;
 
-if ( $config{debugging}{ip_limit} ) {
-    $logging_ip_limit = $config{debugging}{ip_limit};
+if ( $config{logging}{ip_limit} ) {
+    $logging_ip_limit = $config{logging}{ip_limit};
 }
-if ( $config{debugging}{country_limit} ) {
-    $logging_country_limit = $config{debugging}{country_limit};
+if ( $config{logging}{country_limit} ) {
+    $logging_country_limit = $config{logging}{country_limit};
 }
 
 # SQL statements config file
@@ -56,7 +56,7 @@ my $log_file_fh;
 
 sub mylog {
     my ( $log_level, @errstr ) = @_;
-    if ( $config{debugging}{debug} ) {
+    if ( $config{logging}{enable} ) {
         my $date      = localtime(time)->strftime('%F %T');
         my $final_str = "$date $program $log_level: ";
 

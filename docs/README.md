@@ -203,17 +203,15 @@ ip_whitelist = 198.51.100.0/24,203.0.113.123/32
 
 Plugin is by default logging into standard output. This can be changed in configuration file by setting value for `logging.logfile`.
 
-You can disable logging completely by updating value of statement `debugging.debug` to `0`.
+You can disable logging completely by updating value of statement `logging.enable` to `0`.
 
 ```ini
 [logging]
+# enable(1) or disable(0) logging
+enable = 1
 # remove statement `logfile`, or set it to empty `logfile = ` to log into STDOUT
 logfile = /var/log/postfwd_plugin.log
 autoflush = 0
-
-[debugging]
-# enable(1) or disable(0) logging
-debug = 1
 # make log after exceeding unique country count limit
 country_limit = 5
 # make log after exceeding unique ip count limit
