@@ -27,9 +27,9 @@ fi
 chown postfw:postfix /etc/postfix/anti-spam-sql-st.conf
 chown postfw:postfix /etc/postfix/anti-spam.conf
 chown postfw:postfix /etc/postfix/postfwd-anti-spam.plugin
-chmod 640 anti-spam-sql-st.conf
-chmod 640 anti-spam.conf
-chmod 640 postfwd-anti-spam.plugin
+chmod 640 /etc/postfix/anti-spam-sql-st.conf
+chmod 640 /etc/postfix/anti-spam.conf
+chmod 640 /etc/postfix/postfwd-anti-spam.plugin
 
 echo "Do not forget to follow next steps after installation:"
 echo "1. Configure postfwd to run with argument --plugins <PATH TO PLUGIN> (eg. in /etc/default/postfwd)"
