@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS postfwd_logins (
    sasl_username varchar(100),
-   ip_address varchar(16),
+   ip_address varchar(45),
    state_code varchar(4),
    login_count int,
    last_login timestamp
