@@ -19,6 +19,9 @@ use Time::Piece;
 # For subnet matching and IP address validation
 use Net::Subnet;
 
+# IP validator
+use Data::Validate::IP qw(is_ip is_public_ip);
+
 # Configure default path to configuration files
 # or read them from environment variables
 my $cfg_anti_spam_path      = '/etc/postfix/anti-spam.conf';
@@ -365,10 +368,14 @@ my $last_cache_flush = time;
             return $result;
         }
 
-        # Simple regex test if string looks like IP address
-        if ( !( $client_ip =~ m/^\d{1,3}[.]\d{1,3}[.]\d{1,3}[.]\d{1,3}$/msx ) )
-        {
-            mylog_info("'$client_ip' is not a valid IP address");
+        # Validate if IP address is IPv4 or IPv6 public address
+        if (is_ip($client_ip)) {
+            if (! is_public_ip($client_ip)) {
+                mylog_info("'$client_ip' is not a public address");
+                return $result;
+            }
+        } else {
+            mylog_info("'$client_ip' is not a valid IPv4 or IPv6 address");
             return $result;
         }
 
