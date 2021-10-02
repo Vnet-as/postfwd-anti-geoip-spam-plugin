@@ -235,7 +235,7 @@ Plugin stores interesting statistical information in the database. To query thos
 Complete development environment with postfwd, anti-spam plugin and mysql/postgresql database configured together can be run with single command from directory `tests/`:
 - MySQL: `docker-compose -f compose-dev-mysql.yml up`
 - PostgreSQL: `docker-compose -f compose-dev-postgresql.yml up`
-- MySQL with GeoIP2: `export POSTFWD_ANTISPAM_MAIN_CONFIG_PATH=/etc/postfwd/03-dev-anti-spam-mysql-geoip2.conf docker-compose -f compose-dev-mysql.yml up`
+- MySQL with GeoIP2: `export POSTFWD_ANTISPAM_MAIN_CONFIG_PATH=/etc/postfwd/03-dev-anti-spam-mysql-geoip2.conf; docker-compose -f compose-dev-mysql.yml up`
 
 Note for overriding postfwd arguments:
 
