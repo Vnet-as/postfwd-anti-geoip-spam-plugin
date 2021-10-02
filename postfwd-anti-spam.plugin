@@ -395,7 +395,7 @@ my $last_cache_flush = time;
             return $result;
         }
 
-        # Check how many rows was returned (0 or more)
+        # Check how many rows were returned (0 or more)
         my $row_count = $check_row_existence_sth->fetchrow_array;
         if ( $check_row_existence_sth->err ) {
             mylog_err( $check_row_existence_sth->errstr );
