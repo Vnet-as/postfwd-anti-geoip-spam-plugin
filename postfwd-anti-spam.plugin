@@ -335,7 +335,7 @@ my $last_cache_flush = time;
             ) or mylog_fatal( DBI->errstr );
         }
 
-        # Clear old records after flush interval expirates
+        # Clear old records after flush interval expired
         if ( ( $last_cache_flush + $config{app}{db_flush_interval} ) < time ) {
             mylog_info(
 "Removing records which are older than $config{app}{db_flush_interval}"
