@@ -25,8 +25,8 @@ services:
       - postgres-postfwd-db
     volumes:
       - type: bind
-        source: ./02-dev-anti-spam-postgres-geoip1.conf
-        target: /etc/postfwd/02-dev-anti-spam-postgres-geoip1.conf
+        source: ./01-dev-anti-spam-postgres-geoip2.conf
+        target: /etc/postfwd/01-dev-anti-spam-postgres-geoip2.conf
       - type: bind
         source: ./dev-postfwd.cf
         target: /etc/postfwd/postfwd.cf

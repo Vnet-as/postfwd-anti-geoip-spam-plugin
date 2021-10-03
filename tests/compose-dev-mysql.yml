@@ -27,14 +27,11 @@ services:
       - mysql-postfwd-db
     volumes:
       - type: bind
-        source: ./01-dev-anti-spam-mysql-geoip1.conf
-        target: /etc/postfwd/01-dev-anti-spam-mysql-geoip1.conf
+        source: ./02-dev-anti-spam-mysql-geoip2.conf
+        target: /etc/postfwd/02-dev-anti-spam-mysql-geoip2.conf
       - type: bind
-        source: ./03-dev-anti-spam-mysql-geoip2.conf
-        target: /etc/postfwd/03-dev-anti-spam-mysql-geoip2.conf
-      - type: bind
-        source: ./04-dev-anti-spam-mysql-no-geoip.conf
-        target: /etc/postfwd/04-dev-anti-spam-mysql-no-geoip.conf
+        source: ./03-dev-anti-spam-mysql-no-geoip.conf
+        target: /etc/postfwd/03-dev-anti-spam-mysql-no-geoip.conf
       - type: bind
         source: ./dev-postfwd.cf
         target: /etc/postfwd/postfwd.cf

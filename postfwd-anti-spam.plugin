@@ -173,107 +173,65 @@ if ( $config{app}{ip_whitelist_path} || length $config{app}{ip_whitelist_path} )
 
 # GeoIP:
 # Load GeoIP modules
-use Geo::IP;
 use GeoIP2::Database::Reader;
-my $gi;
 
 if (! -e $config{app}{geoip_db_path}) {
-    mylog_fatal("GeoIP Database file $config{app}{geoip_db_path} doesn't exist");
+    mylog_fatal("[GeoIP2] GeoIP Database file $config{app}{geoip_db_path} doesn't exist");
+}
+mylog_info("[GeoIP2] Loading GeoIP Database from file $config{app}{geoip_db_path}");
+
+# GeoIP Version 2 check
+my $gi = GeoIP2::Database::Reader->new(
+    file    => $config{app}{geoip_db_path},
+    locales => [ 'en' ]
+);
+
+my $gi_metadata = eval { $gi->metadata() };
+if ( $EVAL_ERROR ) {
+    mylog_fatal('[GeoIP2] Failed to get info about GeoIP database (v2 decoder)');
+} else {
+    mylog_info('[GeoIP2] Description: ', $gi_metadata->description()->{en});
+    mylog_info('[GeoIP2] Database Edition: ', $gi_metadata->binary_format_major_version(), '.', $gi_metadata->binary_format_minor_version());
+    mylog_info('[GeoIP2] Database Type: ', $gi_metadata->database_type());
+    mylog_info('[GeoIP2] Build: ', $gi_metadata->build_epoch());
+    mylog_info('[GeoIP2] IP Version: ', $gi_metadata->ip_version());
 }
 
-# Try to find out version of GeoIP DB
-sub get_geoip_version {
-    mylog_info("Trying to get version of GeoIP Database from file $config{app}{geoip_db_path}");
-
-    # GeoIP Version 1 check
-    my $gi_v1 = Geo::IP->open($config{app}{geoip_db_path}, GEOIP_MEMORY_CACHE | GEOIP_CHECK_CACHE);
-
-    if ( !length($gi_v1->database_info) || !($gi_v1->database_info)) {
-        mylog_info('Failed to get info about GeoIP database (v1 decoder), perhaps it is version 2')
-    } else {
-        $gi = $gi_v1;
-        mylog_info('GeoIP Database Informations: ', $gi->database_info);
-        mylog_info('GeoIP Database Edition: ', $gi->database_edition);
-        return 1
-    }
-
-    # GeoIP Version 2 check
-    my $gi_v2 = GeoIP2::Database::Reader->new(
-        file    => $config{app}{geoip_db_path},
-        locales => [ 'en' ]
-    );
-
-    my $gi_v2_metadata = eval { $gi_v2->metadata() };
-    if ( $EVAL_ERROR ) {
-        mylog_info('Failed to get info about GeoIP database (v2 decoder)');
-    } else {
-        $gi = $gi_v2;
-        mylog_info('[GeoIP2] Description: ', $gi_v2_metadata->description()->{en});
-        mylog_info('[GeoIP2] Database Edition: ', $gi_v2_metadata->binary_format_major_version(), '.', $gi_v2_metadata->binary_format_minor_version());
-        mylog_info('[GeoIP2] Database Type: ', $gi_v2_metadata->database_type());
-        mylog_info('[GeoIP2] Build: ', $gi_v2_metadata->build_epoch());
-        mylog_info('[GeoIP2] IP Version: ', $gi_v2_metadata->ip_version());
-        return 2
-    }
-
-    return
-}
-
-my $geoip_db_version = get_geoip_version();
-if ( !$geoip_db_version ) {
-    mylog_fatal("Cannot load or decode GeoIP database $config{app}{geoip_db_path}");
-}
-mylog_info("GeoIP database $config{app}{geoip_db_path} with version $geoip_db_version was loaded successfully");
+mylog_info("[GeoIP2] GeoIP database $config{app}{geoip_db_path} with version $geoip_db_version was loaded successfully");
 
 sub geoip_country_code {
     my ($client_ip) = @_;
     my $cc;
 
-    if ($geoip_db_version == 1) {
-        $cc = $gi->country_code_by_addr($client_ip);
-        if ( !defined $cc ) {
-            mylog_info("Cannot find country code for IP address [$client_ip]");
-            return;
-        } else {
-            if ( !length $cc || !($cc) ) {
-                mylog_info("Country code for IP address [$client_ip] is empty");
-                return;
-            }
-        }
-        return $cc;
-    }
-
-    if ($geoip_db_version == 2) {
-        my $country = eval {
-            $gi->country( ip => $client_ip );
-        };
-        if ( $EVAL_ERROR ) {
-            if ($EVAL_ERROR =~ m/No record found for IP address/ims ) {
-                mylog_info("Cannot find IP address in GeoIP database [$client_ip]");
-                return;
-            }
-            if ($EVAL_ERROR =~ m/The IP address you provided (.*) is not a public IP address/ims ) {
-                mylog_info("IP address is not public [$client_ip]");
-                return;
-            }
-            if ($EVAL_ERROR =~ m/is not a valid IP/ims ) {
-                mylog_info("Invalid IP address [$client_ip]");
-                return;
-            }
-            if ($EVAL_ERROR =~ m/The IP address you provided (.*) is not a valid IPv4/ims ) {
-                mylog_info("Invalid IP address [$client_ip]");
-                return;
-            }
-        }
-        my $country_rec = $country->country();
-
-        $cc = eval { $country_rec->iso_code() };
-        if ( $EVAL_ERROR ) {
-            mylog_info("Country code for IP address [$client_ip] is empty");
+    my $country = eval {
+        $gi->country( ip => $client_ip );
+    };
+    if ( $EVAL_ERROR ) {
+        if ($EVAL_ERROR =~ m/No record found for IP address/ims ) {
+            mylog_info("Cannot find IP address in GeoIP database [$client_ip]");
             return;
         }
-        return $cc;
+        if ($EVAL_ERROR =~ m/The IP address you provided (.*) is not a public IP address/ims ) {
+            mylog_info("IP address is not public [$client_ip]");
+            return;
+        }
+        if ($EVAL_ERROR =~ m/is not a valid IP/ims ) {
+            mylog_info("Invalid IP address [$client_ip]");
+            return;
+        }
+        if ($EVAL_ERROR =~ m/The IP address you provided (.*) is not a valid IPv4/ims ) {
+            mylog_info("Invalid IP address [$client_ip]");
+            return;
+        }
     }
+    my $country_rec = $country->country();
+
+    $cc = eval { $country_rec->iso_code() };
+    if ( $EVAL_ERROR ) {
+        mylog_info("Country code for IP address [$client_ip] is empty");
+        return;
+    }
+    return $cc;
 }
 
 

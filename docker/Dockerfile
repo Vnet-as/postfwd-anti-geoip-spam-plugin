@@ -21,8 +21,7 @@ RUN    apk --no-cache update \
                           openssl \
                           libmaxminddb-dev \
     && cpan App::cpanminus \
-    && cpanm Geo::IP \
-             IO::Handle \
+    && cpanm IO::Handle \
              Config::General \
              Config::Tiny \
              Config::Any::INI \
@@ -48,10 +47,6 @@ RUN    apk --no-cache update \
                perl-utils \
                perl-dev \
     && rm -rf ~/.cpanm
-
-# Install GeoIP database
-RUN mkdir /usr/local/share/GeoIP/
-COPY docker/GeoIP.dat docker/GeoIPv6.dat /usr/local/share/GeoIP/
 
 # Copy entrypoint script
 COPY docker/docker-entrypoint.sh /usr/local/bin/
