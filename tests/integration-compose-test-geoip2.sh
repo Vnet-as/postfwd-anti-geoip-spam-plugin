@@ -13,7 +13,7 @@ function send_requests {
 }
 
 
-# Valid user logging in with IP addresses from United Kingdom and Sweden
+# Valid user logging in with IPv4 and IPv6 addresses from United Kingdom and Sweden
 sasl_username="valid-user@example.com"
 valid_user_addresses=( 2.125.160.216
                        81.2.69.142
@@ -21,16 +21,21 @@ valid_user_addresses=( 2.125.160.216
                        81.2.69.192
                        89.160.20.112
                        89.160.20.128
+                       2a02:d3c0::12
+                       2a02:da40::ee02
+                       2a02:da40:0000:0000:0000:ff00:0042:8329
 )
 send_requests "$sasl_username" "valid_user_addresses"
 
 
-# User logging from IP addresses which are not in DB
+# User logging from IPv4 and IPv6 addresses which are not in DB
 sasl_username="valid-user-non-existing-ip@example.com"
 valid_user_non_existing_ip_addresses=(192.168.35.1
                                       10.1.1.1
                                       172.20.20.20
                                       192.0.2.15
+                                      ::1
+                                      2001::4444
 )
 send_requests "$sasl_username" "valid_user_non_existing_ip_addresses"
 
@@ -41,11 +46,13 @@ valid_user_invalid_ips=(my-special-ip
                         10123.1.1.1
                         172.20.20.20:1234
                         500.0.2.15
+                        2a02:da40::oo1k
+                        ::
 )
 send_requests "$sasl_username" "valid_user_invalid_ips"
 
 
-# Spam user logging in with IP addresses from 7 different countries
+# Spam user logging in with IPv4 and IPv6 addresses from 7 different countries
 # UK, US, BT, SE, CN, PH, GI
 sasl_username="spam-user1@example.com"
 spam_user1_addresses=( 2.125.160.216
@@ -55,11 +62,15 @@ spam_user1_addresses=( 2.125.160.216
                        111.235.160.1
                        202.196.224.0
                        217.65.48.0
+                       2a02:d540::a
+                       2a02:d040::15
+                       2001:252::252
+                       2a02:ffc0:500::100
 )
 send_requests "$sasl_username" "spam_user1_addresses"
 
 
-# Spam user logging in with 25 different IP addresses from SE
+# Spam user logging in with 30 different IPv4 and IPv6 addresses from SE
 sasl_username="spam-user2@example.com"
 spam_user2_addresses=( 89.160.20.128 89.160.20.129 89.160.20.130
                        89.160.20.131 89.160.20.132 89.160.20.133
@@ -69,7 +80,8 @@ spam_user2_addresses=( 89.160.20.128 89.160.20.129 89.160.20.130
                        89.160.20.143 89.160.20.144 89.160.20.145
                        89.160.20.146 89.160.20.147 89.160.20.148
                        89.160.20.149 89.160.20.150 89.160.20.151
-                       89.160.20.152
+                       89.160.20.152 2a02:ffc0::30 2a02:ffc0::31
+                       2a02:ffc0::32 2a02:ffc0::33 2a02:ffc0::34
 )
 send_requests "$sasl_username" "spam_user2_addresses"
 
@@ -95,7 +107,7 @@ if ! docker-compose -f "${script_path}/compose-dev-mysql.yml" logs postfwd-geoip
   errors+=("2")
 fi
 if ! docker-compose -f "${script_path}/compose-dev-mysql.yml" logs postfwd-geoip-antispam \
-     | grep "User spam-user2@example.com was logged from more than 20 IP addresses(2[45])"; then
+    | grep -E "User spam-user2@example.com was logged from more than 20 IP addresses\((30|29)\)"; then
   echo -e 'ERROR: User did not exceed IP address limit (20) but should!'
   errors+=("3")
 fi
