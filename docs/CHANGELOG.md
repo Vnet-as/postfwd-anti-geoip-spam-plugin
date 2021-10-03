@@ -2,6 +2,40 @@
 
 This changelog notes changes between versions of Postfwd GeoIP Anti-Spam plugin.
 
+## Version 2.0.0 [3. October 2021]
+
+Add IPv6 support for GeoIP2 databases.
+
+This is a feature that was [requested and meant to be included for a long time](https://github.com/Vnet-as/postfwd-anti-geoip-spam-plugin/issues/12), but the revision of code was always postponed.
+
+This release is tagged as `2.0.0` because IPv6 support in this plugin requires some breaking changes. The database must be dropped and recreated (or left to be created by plugin) because IPv6 addresses are longer than IPv4 addresses and the `ip_address` column had size of `varchar(16)`. With this change the column will be expanded to 45 characters.
+
+Note: Dropping the database is nothing major in this project as it only serves as cache. Altering the database schema or doing migrations would complicate code.
+
+There is one new dependency - `Data::Validate::IP` - that will make the IP address validation easier and more consistent than using regexes. It will test for valid IPv4 or IPv6 address, but also test if IP address is public. Since GeoIP databases can work only with public addresses, the GeoIP would throw error on other than public address anyway. This will reduce load on GeoIP.
+
+If you forget to drop database, you will see error such as this in log:
+
+```bash
+[postfwd3/policy][10][LOG warning]: warning: DBD::mysql::st execute failed: Data too long for column 'ip_address' at row 1 at /etc/postfwd/postfwd-anti-spam.plugin line 411.?
+postfwd::anti-spam-plugin ERROR[10]: Data too long for column 'ip_address' at row 1
+```
+
+### Breaking changes
+
+- Resize column `ip_address` in database schema from 16 to 45 characters.
+- Add new dependency `Data::Validate::IP`.
+
+### Features / Enhancements
+
+- IPv6 support
+- Better IP address validation
+
+### Bugfixes
+
+None
+
+
 ## Version 1.50.0 [27. March 2021]
 
 GeoIP2 Feature.
