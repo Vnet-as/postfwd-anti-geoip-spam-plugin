@@ -116,4 +116,3 @@ if [ "${#errors[@]}" -gt 0 ]; then
   echo "Tests ended up with errors[${errors[*]}]."
   exit 1
 fi
-
