@@ -27,12 +27,13 @@ If you are interested in how your users got their mail accounts hacked, check ou
 
 ## Plugin Compatibility Matrix
 
-| Plugin Version | Postfwd Version          | GeoIP Version |
-| :------------- | :----------------------- | :------------ |
-| v1.50.0        | postfwd3 v2.xx           | GeoIP 1, 2    |
-| v1.40          | postfwd3 v2.xx           | GeoIP 1       |
-| v1.30          | postfwd3 v2.xx           | GeoIP 1       |
-| v1.21          | postfwd1, postfwd2 v1.xx | GeoIP 1       |
+| Plugin Version | Postfwd Version          | GeoIP Version | IP version |
+| :------------- | :----------------------- | :------------ | :--------- |
+| v2.0.0         | postfwd3 v2.xx           | GeoIP 1, 2    | IPv4, IPv6 |
+| v1.50.0        | postfwd3 v2.xx           | GeoIP 1, 2    | IPv4       |
+| v1.40          | postfwd3 v2.xx           | GeoIP 1       | IPv4       |
+| v1.30          | postfwd3 v2.xx           | GeoIP 1       | IPv4       |
+| v1.21          | postfwd1, postfwd2 v1.xx | GeoIP 1       | IPv4       |
 
 - Supported database backends are **MySQL** and **PostgreSQL**.
 
