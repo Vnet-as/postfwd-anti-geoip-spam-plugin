@@ -197,7 +197,7 @@ if ( $EVAL_ERROR ) {
     mylog_info('[GeoIP2] IP Version: ', $gi_metadata->ip_version());
 }
 
-mylog_info("[GeoIP2] GeoIP database $config{app}{geoip_db_path} with version $geoip_db_version was loaded successfully");
+mylog_info("[GeoIP2] GeoIP2 database $config{app}{geoip_db_path} was loaded successfully");
 
 sub geoip_country_code {
     my ($client_ip) = @_;
