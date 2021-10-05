@@ -21,10 +21,17 @@ If you forget to drop database, you will see error such as this in log:
 postfwd::anti-spam-plugin ERROR[10]: Data too long for column 'ip_address' at row 1
 ```
 
+Support for GeoIP database version 1 was dropped in this release. There are 4 reasons for this:
+1. There is no support for legacy GeoIP DBs.
+1. There are no official test databases.
+1. The support matrix became complicated.
+1. Legacy GeoIP database that was included in Docker image doesn't contain both IPv4 and IPv6 addresses and the interface would need to support loading of multiple files.
+
 ### Breaking changes
 
 - Resize column `ip_address` in database schema from 16 to 45 characters.
 - Add new dependency `Data::Validate::IP`.
+- Support for GeoIP version 1 was dropped.
 
 ### Features / Enhancements
 

@@ -29,7 +29,7 @@ If you are interested in how your users got their mail accounts hacked, check ou
 
 | Plugin Version | Postfwd Version          | GeoIP Version | IP version |
 | :------------- | :----------------------- | :------------ | :--------- |
-| v2.0.0         | postfwd3 v2.xx           | GeoIP 1, 2    | IPv4, IPv6 |
+| v2.0.0         | postfwd3 v2.xx           | GeoIP 2       | IPv4, IPv6 |
 | v1.50.0        | postfwd3 v2.xx           | GeoIP 1, 2    | IPv4       |
 | v1.40          | postfwd3 v2.xx           | GeoIP 1       | IPv4       |
 | v1.30          | postfwd3 v2.xx           | GeoIP 1       | IPv4       |
@@ -89,7 +89,7 @@ CREATE INDEX postfwd_sasl_username ON postfwd_logins (sasl_username);
 - `Postfwd2` or `Postfwd3`.
 - Database (`MySQL` or `PostgreSQL`).
 - Perl modules - `Geo::IP`, `DBI`, `Time::Piece`, `Config::Any`, `Net::Subnet`, `DBD::mysql` or `DBD::Pg`.
-- GeoIP database (version 1 or 2).
+- GeoIP database (GeoIP version 1 in releases before `2.0.0` or GeoIP version 2 since release `2.0.0`).
 
 #### Cpanm
 
@@ -189,7 +189,7 @@ password = password
 
 The plugin is by default configured to remove records for users with last login date older than 24 hours. This interval can be changed in configuration `app.db_flush_interval`.
 
-Plugin looks by default for GeoIP database file in path `/usr/local/share/GeoIP/GeoIP.dat`. You can override this path in configuration `app.geoip_db_path`.
+Plugin looks by default for GeoIP database file in path `/usr/local/share/GeoIP/GeoLite2-Country.mmdb`. You can override this path in configuration `app.geoip_db_path`.
 
 You can whitelist set of IP addresses or subnets in CIDR format by using configuration setting `app.ip_whitelist`. Whitelisting means, that if client logs into email account from IP address, which IS in whitelist, it will NOT increment login count for this pair of `sasl_username|client_address`.
 
@@ -197,7 +197,7 @@ You can whitelist set of IP addresses or subnets in CIDR format by using configu
 [app]
 # flush database records with last login older than 1 day
 db_flush_interval = 86400
-geoip_db_path = /usr/local/share/GeoIP/GeoIP.dat
+geoip_db_path = /usr/local/share/GeoIP/GeoLite2-Country.mmdb
 # IP whitelist must be valid comma separated strings in CIDR format without whitespaces.
 # it specifies IP addresses which will NOT be counted into user logins database.
 ip_whitelist = 198.51.100.0/24,203.0.113.123/32
@@ -234,9 +234,8 @@ Plugin stores interesting statistical information in the database. To query thos
 ### Prototyping with Docker
 
 Complete development environment with postfwd, anti-spam plugin and mysql/postgresql database configured together can be run with single command from directory `tests/`:
-- MySQL: `docker-compose -f compose-dev-mysql.yml up`
-- PostgreSQL: `docker-compose -f compose-dev-postgresql.yml up`
-- MySQL with GeoIP2: `export POSTFWD_ANTISPAM_MAIN_CONFIG_PATH=/etc/postfwd/03-dev-anti-spam-mysql-geoip2.conf; docker-compose -f compose-dev-mysql.yml up`
+- PostgreSQL: `export POSTFWD_ANTISPAM_MAIN_CONFIG_PATH=/etc/postfwd/01-dev-anti-spam-postgres-geoip2.conf; docker-compose -f compose-dev-postgresql.yml up`
+- MySQL:      `export POSTFWD_ANTISPAM_MAIN_CONFIG_PATH=/etc/postfwd/02-dev-anti-spam-mysql-geoip2.conf;    docker-compose -f compose-dev-mysql.yml      up`
 
 Note for overriding postfwd arguments:
 
@@ -256,8 +255,4 @@ Run plugin as mentioned in [Prototyping with Docker](#prototyping-with-docker) a
 export CLIENT_ADDRESS='1.2.3.4'
 export SASL_USERNAME='testuser@example.com'
 nc 127.0.0.1 10040 < <(envsubst < dev-request)
-
-# run testing script
-cd tests
-DATABASES="mysql postgresql" RUN_COMPOSE=1 ./integration-compose-test-geoip1.sh
 ```

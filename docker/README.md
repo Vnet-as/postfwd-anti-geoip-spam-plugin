@@ -70,7 +70,7 @@ ip_limit = 20
 [app]
 # Flush database records with last login older than 1 day
 db_flush_interval = 86400
-geoip_db_path = /usr/local/share/GeoIP/GeoIP.dat
+geoip_db_path = /usr/local/share/GeoIP/GeoLite2-Country.mmdb
 # IP whitelist must be valid comma separated strings in CIDR format without whitespaces.
 # It specifies IP addresses which will NOT be counted into user logins database.
 # ip_whitelist = 198.51.100.0/24,203.0.113.123/32
