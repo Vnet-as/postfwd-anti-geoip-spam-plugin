@@ -197,7 +197,7 @@ if ( $EVAL_ERROR ) {
     mylog_info('[GeoIP2] IP Version: ', $gi_metadata->ip_version());
 }
 
-mylog_info("[GeoIP2] GeoIP database $config{app}{geoip_db_path} with version $geoip_db_version was loaded successfully");
+mylog_info("[GeoIP2] GeoIP2 database $config{app}{geoip_db_path} was loaded successfully");
 
 sub geoip_country_code {
     my ($client_ip) = @_;
@@ -208,11 +208,11 @@ sub geoip_country_code {
     };
     if ( $EVAL_ERROR ) {
         if ($EVAL_ERROR =~ m/No record found for IP address/ims ) {
-            mylog_info("[GeoIP2] Cannot find IP address in GeoIP database [$client_ip]");
+            mylog_info("[GeoIP2] Cannot find IP address [$client_ip] in GeoIP database");
             return;
         }
         if ($EVAL_ERROR =~ m/The IP address you provided (.*) is not a public IP address/ims ) {
-            mylog_info("[GeoIP2] IP address is not public [$client_ip]");
+            mylog_info("[GeoIP2] IP address [$client_ip] is not public");
             return;
         }
         if ($EVAL_ERROR =~ m/is not a valid IP/ims ) {
