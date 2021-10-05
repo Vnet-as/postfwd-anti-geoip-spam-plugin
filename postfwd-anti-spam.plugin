@@ -289,6 +289,29 @@ sub is_db_connection_alive {
     return 1
 }
 
+# Function: Check if user exists in logins database
+sub user_exists {
+    my ($user) = @_;
+
+    my $check_user_existence_sth =
+      $dbh->prepare( $config_sql{check_user_existence_st} )
+      or do {
+          mylog_err( $dbh->errstr );
+          return 0;
+      };
+
+    my $row_count = $check_user_existence_sth->execute($user);
+    if ( $row_count == 0 ) {
+        if ( $check_user_existence_sth->err ) {
+            mylog_err( $check_user_existence_sth->errstr );
+        }
+        return 0;
+    }
+
+    return 1;
+}
+
+
 %postfwd_items_plugin = (
 
     'incr_client_country_login_count' => sub {
@@ -433,15 +456,8 @@ sub is_db_connection_alive {
             return $result;
         }
 
-        # Check if user with given IP already has record
-        my $check_user_existence_sth =
-          $dbh->prepare( $config_sql{check_user_existence_st} )
-          or do { mylog_err( $dbh->errstr ); return $result; };
-        my $row_count = $check_user_existence_sth->execute($user);
-        if ( $row_count == 0 ) {
-            if ( $check_user_existence_sth->err ) {
-                mylog_err( $check_user_existence_sth->errstr );
-            }
+        # Check if user already exists, if not return from function
+        if (!user_exists($user)) {
             return $result;
         }
 
@@ -490,15 +506,8 @@ sub is_db_connection_alive {
             return $result;
         }
 
-        # Check if user with given IP already has record
-        my $check_user_existence_sth =
-          $dbh->prepare( $config_sql{check_user_existence_st} )
-          or do { mylog_err( $dbh->errstr ); return $result; };
-        my $row_count = $check_user_existence_sth->execute($user);
-        if ( $row_count == 0 ) {
-            if ( $check_user_existence_sth->err ) {
-                mylog_err( $check_user_existence_sth->errstr );
-            }
+        # Check if user already exists, if not return from function
+        if (!user_exists($user)) {
             return $result;
         }
 
