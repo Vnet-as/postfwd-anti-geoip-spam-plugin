@@ -27,12 +27,13 @@ If you are interested in how your users got their mail accounts hacked, check ou
 
 ## Plugin Compatibility Matrix
 
-| Plugin Version | Postfwd Version          | GeoIP Version |
-| :------------- | :----------------------- | :------------ |
-| v1.50.0        | postfwd3 v2.xx           | GeoIP 1, 2    |
-| v1.40          | postfwd3 v2.xx           | GeoIP 1       |
-| v1.30          | postfwd3 v2.xx           | GeoIP 1       |
-| v1.21          | postfwd1, postfwd2 v1.xx | GeoIP 1       |
+| Plugin Version | Postfwd Version          | GeoIP Version | IP version |
+| :------------- | :----------------------- | :------------ | :--------- |
+| v2.0.0         | postfwd3 v2.xx           | GeoIP 1, 2    | IPv4, IPv6 |
+| v1.50.0        | postfwd3 v2.xx           | GeoIP 1, 2    | IPv4       |
+| v1.40          | postfwd3 v2.xx           | GeoIP 1       | IPv4       |
+| v1.30          | postfwd3 v2.xx           | GeoIP 1       | IPv4       |
+| v1.21          | postfwd1, postfwd2 v1.xx | GeoIP 1       | IPv4       |
 
 - Supported database backends are **MySQL** and **PostgreSQL**.
 
@@ -44,7 +45,7 @@ Pre-built ready-to-use Docker image is located on DockerHub and can be simply pu
 
 ```bash
 # postfwd3 tags
-docker pull lirt/postfwd-anti-geoip-spam-plugin:v1.50.0
+docker pull lirt/postfwd-anti-geoip-spam-plugin:v2.0.0
 # postfwd1, postfwd2 tags
 docker pull lirt/postfwd-anti-geoip-spam-plugin:v1.21
 ```
@@ -55,7 +56,7 @@ To run postfwd with geoip-plugin, run docker with configuration files mounted as
 docker run \
     -v </absolute/path/to/anti-spam.conf>:/etc/postfwd/anti-spam.conf \
     -v </absolute/path/to/postfwd.cf>:/etc/postfwd/postfwd.cf \
-    lirt/postfwd-anti-geoip-spam-plugin:v1.50.0
+    lirt/postfwd-anti-geoip-spam-plugin:v2.0.0
 ```
 
 This will run `postfwd2` or `postfwd3` (based on docker tag) with default arguments, reading postfwd rules file from your mounted volume file `postfwd.cf` and using anti-spam configuration from your file `anti-spam.conf`.
@@ -74,7 +75,7 @@ To install this plugin follow next steps:
 ```sql
 CREATE TABLE IF NOT EXISTS postfwd_logins (
    sasl_username varchar(100),
-   ip_address varchar(16),
+   ip_address varchar(45),
    state_code varchar(4),
    login_count int,
    last_login timestamp
@@ -112,7 +113,8 @@ yum install -y 'perl(Geo::IP)' \
                'perl(LWP::Protocol::https)' \
                'perl(Class::XSAccessor)' \
                'perl(MaxMind::DB::Reader::XS)' \
-               'perl(Readonly)'
+               'perl(Readonly)' \
+               'perl(Data::Validate::IP)'
 ```
 
 #### Dependencies on Debian based distributions
@@ -134,7 +136,8 @@ apt-get install -y libgeo-ip-perl \
                    libclass-xsaccessor-perl \
                    libmaxmind-db-reader-xs-perl \
                    libgeoip2-perl \
-                   libreadonly-perl
+                   libreadonly-perl \
+                   libdata-validate-ip-perl
 ```
 
 ## Configuration
@@ -233,7 +236,7 @@ Plugin stores interesting statistical information in the database. To query thos
 Complete development environment with postfwd, anti-spam plugin and mysql/postgresql database configured together can be run with single command from directory `tests/`:
 - MySQL: `docker-compose -f compose-dev-mysql.yml up`
 - PostgreSQL: `docker-compose -f compose-dev-postgresql.yml up`
-- MySQL with GeoIP2: `export POSTFWD_ANTISPAM_MAIN_CONFIG_PATH=/etc/postfwd/03-dev-anti-spam-mysql-geoip2.conf docker-compose -f compose-dev-mysql.yml up`
+- MySQL with GeoIP2: `export POSTFWD_ANTISPAM_MAIN_CONFIG_PATH=/etc/postfwd/03-dev-anti-spam-mysql-geoip2.conf; docker-compose -f compose-dev-mysql.yml up`
 
 Note for overriding postfwd arguments:
 

@@ -40,6 +40,7 @@ RUN    apk --no-cache update \
              GeoIP2::Database::Reader \
              Class::XSAccessor \
              MaxMind::DB::Reader::XS --force \
+             Data::Validate::IP \
     && apk del make \
                wget \
                gcc \

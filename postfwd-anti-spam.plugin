@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 # Declare version
-our $VERSION = '1.50.0';
+our $VERSION = '2.0.0';
 
 # English module for Perl::Critic compliance
 use English qw( -no_match_vars );
@@ -18,6 +18,9 @@ use Time::Piece;
 
 # For subnet matching and IP address validation
 use Net::Subnet;
+
+# IP validator
+use Data::Validate::IP qw(is_ip is_public_ip);
 
 # Configure default path to configuration files
 # or read them from environment variables
@@ -332,7 +335,7 @@ my $last_cache_flush = time;
             ) or mylog_fatal( DBI->errstr );
         }
 
-        # Clear old records after flush interval expirates
+        # Clear old records after flush interval expired
         if ( ( $last_cache_flush + $config{app}{db_flush_interval} ) < time ) {
             mylog_info(
 "Removing records which are older than $config{app}{db_flush_interval}"
@@ -365,10 +368,14 @@ my $last_cache_flush = time;
             return $result;
         }
 
-        # Simple regex test if string looks like IP address
-        if ( !( $client_ip =~ m/^\d{1,3}[.]\d{1,3}[.]\d{1,3}[.]\d{1,3}$/msx ) )
-        {
-            mylog_info("'$client_ip' is not a valid IP address");
+        # Validate if IP address is IPv4 or IPv6 public address
+        if (is_ip($client_ip)) {
+            if (! is_public_ip($client_ip)) {
+                mylog_info("'$client_ip' is not a public address");
+                return $result;
+            }
+        } else {
+            mylog_info("'$client_ip' is not a valid IPv4 or IPv6 address");
             return $result;
         }
 
@@ -388,7 +395,7 @@ my $last_cache_flush = time;
             return $result;
         }
 
-        # Check how many rows was returned (0 or more)
+        # Check how many rows were returned (0 or more)
         my $row_count = $check_row_existence_sth->fetchrow_array;
         if ( $check_row_existence_sth->err ) {
             mylog_err( $check_row_existence_sth->errstr );
